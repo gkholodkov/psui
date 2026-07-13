@@ -1,38 +1,30 @@
 import React from "react";
 import { Link } from "react-router";
-import { BookOpen } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 
 export function WelcomeScreen() {
   return (
     <div className="min-h-screen bg-[#F5F5F5] flex flex-col font-sans">
-      <div className="flex flex-col w-full pt-20 px-10 relative z-10">
-        <h1 className="text-[3.5rem] leading-[1.1] font-semibold text-zinc-900 mb-8 tracking-tight">
+      <div className="flex flex-col justify-center w-full min-h-[62vh] py-16 px-10 relative z-10">
+        <h1 className="text-[4.5rem] leading-[1.02] font-semibold text-zinc-900 mb-8 tracking-tight">
           Cheap room
           <br />
           or <span className="text-[#E3B740]">scam?</span>
         </h1>
         
-        <p className="text-2xl text-zinc-800 mb-12 font-medium">
-          Test your instincts in<br />
-          60 seconds.
+        <p className="text-2xl text-zinc-800 mb-10 font-medium max-w-xl">
+          Pick a room, make your first call, then inspect the application before you click, pay, or share documents.
         </p>
         
         <div className="flex flex-col gap-5 w-full z-10 mb-8 relative">
           <Link
             to="/board"
+            replace
             className="w-full bg-[#E3B740] hover:bg-[#d6a935] text-zinc-900 py-5 rounded-[2.5rem] font-medium text-xl text-center transition-colors shadow-sm"
           >
             Start
           </Link>
           
-          <Link
-            to="/checklist"
-            className="w-full bg-transparent border-2 border-zinc-400 hover:bg-zinc-200/50 text-zinc-900 py-5 rounded-[2.5rem] font-medium text-xl flex items-center justify-center gap-3 transition-colors"
-          >
-            <BookOpen className="w-6 h-6" />
-            Learn first
-          </Link>
         </div>
       </div>
       

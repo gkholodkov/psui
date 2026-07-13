@@ -1,217 +1,147 @@
-import React, { useEffect, useRef, useState } from "react";
-import { useParams, Link, Navigate } from "react-router";
-import { ads } from "../data";
+import React from "react";
+import { Link, Navigate, useParams } from "react-router";
+import { ads, checklist, type ChecklistKey } from "../data";
 import { useAdInspection } from "../state/InspectionContext";
-import { CheckCircle, XCircle, Info, ArrowRight, ListChecks } from "lucide-react";
-
-interface SessionSnapshot {
-  answeredCount: number;
-  total: number;
-}
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
+import { CheckCircle, XCircle, ChevronDown, ChevronRight } from "lucide-react";
 
 export function OutcomeScreen() {
-  const { adId, outcomeType } = useParams();
-  const ad = ads.find((a) => a.id === adId);
+  const { adId } = useParams();
+  const ad = ads.find((item) => item.id === adId);
   const inspection = useAdInspection(adId ?? "");
-  const resetOutcomeKeyRef = useRef<string | null>(null);
-  const [sessionSnapshot, setSessionSnapshot] = useState<SessionSnapshot | null>(null);
 
-  useEffect(() => {
-    if (!ad || !outcomeType) return;
+  if (!ad || !inspection.state.verdict) return <Navigate to="/board" replace />;
 
-    const outcomeKey = `${ad.id}:${outcomeType}`;
-    if (resetOutcomeKeyRef.current === outcomeKey) return;
+  const mandatory = ad.hotspots.filter((hotspot) => hotspot.mandatory);
+  const mandatoryChecked = mandatory.filter(
+    (hotspot) => inspection.state.classifications[hotspot.id] !== undefined
+  ).length;
+  const mandatoryCorrect = mandatory.filter(
+    (hotspot) => inspection.state.correct[hotspot.id] === true
+  ).length;
+  const threshold = Math.ceil(mandatory.length / 2);
+  const enoughEvidence = mandatoryChecked >= threshold;
+  const correctVerdict =
+    (inspection.state.verdict === "scam") === (ad.type === "Scam");
 
-    resetOutcomeKeyRef.current = outcomeKey;
-    setSessionSnapshot({
-      answeredCount: ad.hotspots.filter((h) => inspection.state.classifications[h.id] !== undefined).length,
-      total: ad.hotspots.length,
-    });
-    inspection.resetAll();
-  }, [ad, outcomeType, inspection.state.classifications, inspection.resetAll]);
+  const headline = correctVerdict
+    ? enoughEvidence
+      ? "Good call, backed by evidence"
+      : "Correct instinct, but inspect more next time"
+    : enoughEvidence
+    ? "You found cues, but the verdict was wrong"
+    : "This choice needed more evidence";
+  const body = correctVerdict
+    ? enoughEvidence
+      ? "Your decision matched the offer and you checked enough of its important cues."
+      : "Your decision matched the offer, but the evidence check was incomplete."
+    : enoughEvidence
+    ? "You inspected enough mandatory cues to make an informed decision, but the final verdict did not match this offer."
+    : "The final verdict did not match this offer, and too few mandatory cues were checked to support it.";
+  const tone = correctVerdict && enoughEvidence ? "success" : correctVerdict ? "warning" : "error";
 
-  if (!ad || !outcomeType) return <Navigate to="/board" />;
-
-  let headline = "";
-  let body = "";
-  let takeaway = "";
-  let type: "success" | "error" | "warning" | "info" = "success";
-  let lesson = "";
-  let safeEvidence: string[] | null = null;
-  let safeEvidenceHeading = "Safe signals you would have rejected:";
-
-  if (outcomeType === "safe") {
-    type = "success";
-    headline = "Good call: you stopped before the risky step";
-    body = "You checked the route, requested data, and timing before acting.";
-    lesson = ad.outcomeSafeTactic || "";
-    takeaway = "Verification should happen before documents, deposits, or private-channel contact.";
-  } else if (outcomeType === "unsafe") {
-    type = "error";
-    headline = "Risky path: the scammer gets leverage";
-    body = ad.outcomeUnsafeBody || "";
-    takeaway = "Stop when the process asks for sensitive data or payment before verification.";
-  } else if (outcomeType === "unsafe-after-inspect") {
-    type = "warning";
-    headline = "Research only helps if it changes the action";
-    body = "You found the risk cues, but still continued through the unsafe route.";
-    takeaway = "The goal is not only to notice red flags. The goal is to change the next action.";
-  } else if (outcomeType === "safe-apply") {
-    type = "success";
-    headline = "Reasonable action: request viewing";
-    body = "You checked the evidence before acting. The route is accountable, viewing comes before payment, and no sensitive document is requested early.";
-    takeaway = "Verify first, then act safely.";
-  } else if (outcomeType === "safe-unverified") {
-    type = "warning";
-    headline = "Safe offer, risky process";
-    body = "This proposal was legitimate, so nothing bad happened. But you continued without answering any inspection prompt.";
-    takeaway = "A good outcome is not proof that the method was safe. Verify evidence cues before you continue.";
-    safeEvidenceHeading = "Evidence cues you skipped:";
-    safeEvidence = ad.evidenceList.map((e) => `${e.cue}: ${e.interpretation}`);
-  } else if (outcomeType === "false-positive") {
-    type = "info";
-    headline = "Suspicion means verify, not panic";
-    body = "This listing had safer transaction patterns. Rejecting it on instinct would have cost you a legitimate room.";
-    takeaway = "A single suspicious-looking step is not the same as a scam. Look at route, timing, and refund terms together.";
-    safeEvidence = ad.evidenceList.map((e) => `${e.cue}: ${e.interpretation}`);
-  } else if (outcomeType === "unnecessary-report") {
-    // legacy slug — keep as alias of false-positive
-    type = "info";
-    headline = "Safe, but probably unnecessary";
-    body = "This offer looked less polished, but the evidence was mostly safe.";
-    takeaway = "Suspicion means verify, not panic.";
-    safeEvidence = ad.evidenceList.map((e) => `${e.cue}: ${e.interpretation}`);
-  } else {
-    return <Navigate to="/board" />;
-  }
-
-  const answeredCount =
-    sessionSnapshot?.answeredCount ??
-    ad.hotspots.filter((h) => inspection.state.classifications[h.id] !== undefined).length;
-  const total = sessionSnapshot?.total ?? ad.hotspots.length;
-  const showInspectionStats = answeredCount > 0 || outcomeType === "safe-unverified";
+  const orderedKeys = [
+    ...ad.relevantChecklistKeys,
+    ...checklist.map((item) => item.key).filter((key) => !ad.relevantChecklistKeys.includes(key)),
+  ] as ChecklistKey[];
+  const orderedChecklist = orderedKeys
+    .map((key) => checklist.find((item) => item.key === key))
+    .filter((item): item is (typeof checklist)[number] => Boolean(item));
 
   return (
-    <div className="min-h-screen flex flex-col justify-center p-6 bg-[#F5F5F5] text-zinc-900">
-      <div className="w-full">
+    <div className="min-h-screen bg-[#F5F5F5] text-zinc-900 p-6 pb-12">
+      <div className="max-w-3xl mx-auto">
         <div className="text-center mb-8 flex flex-col items-center">
-          {type === "success" && <CheckCircle className="w-16 h-16 text-green-600 mb-4" />}
-          {type === "error" && <XCircle className="w-16 h-16 text-red-600 mb-4" />}
-          {type === "warning" && <Info className="w-16 h-16 text-yellow-600 mb-4" />}
-          {type === "info" && <Info className="w-16 h-16 text-blue-500 mb-4" />}
-
+          {tone === "success" ? (
+            <CheckCircle className="w-16 h-16 text-green-600 mb-4" />
+          ) : (
+            <XCircle className={`w-16 h-16 mb-4 ${tone === "warning" ? "text-yellow-600" : "text-red-600"}`} />
+          )}
           <h1
-            className={`text-2xl font-bold mb-4 ${
-              type === "success"
-                ? "text-green-700"
-                : type === "error"
-                ? "text-red-700"
-                : type === "warning"
-                ? "text-yellow-700"
-                : "text-blue-700"
+            className={`text-3xl font-bold mb-4 ${
+              tone === "success" ? "text-green-700" : tone === "warning" ? "text-yellow-700" : "text-red-700"
             }`}
           >
             {headline}
           </h1>
-
           <p className="text-zinc-600 text-lg">{body}</p>
         </div>
 
-        {showInspectionStats && (
-          <div className="bg-white rounded-xl p-4 shadow-sm mb-6 border border-zinc-200 flex items-center justify-between">
-            <div className="text-sm text-zinc-600">
-              Inspection: <span className="font-semibold text-zinc-900">{answeredCount} of {total}</span> evidence cues checked
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-zinc-200 mb-6">
+          <h2 className="font-bold text-zinc-900 mb-4">Your session</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+            <div className="rounded-xl bg-zinc-50 p-3">
+              <div className="text-zinc-500 mb-1">Verdict</div>
+              <div className="font-semibold text-zinc-900">
+                {inspection.state.verdict === "scam" ? "It’s a scam" : "It’s not a scam"}
+              </div>
+            </div>
+            <div className="rounded-xl bg-zinc-50 p-3">
+              <div className="text-zinc-500 mb-1">Mandatory cues checked</div>
+              <div className="font-semibold text-zinc-900">{mandatoryChecked} of {mandatory.length}</div>
+              <div className="text-xs text-zinc-500 mt-1">Threshold: {threshold}</div>
+            </div>
+            <div className="rounded-xl bg-zinc-50 p-3">
+              <div className="text-zinc-500 mb-1">Classified correctly</div>
+              <div className="font-semibold text-zinc-900">{mandatoryCorrect} of {mandatory.length}</div>
+              <div className="text-xs text-zinc-500 mt-1">Optional cues do not affect points</div>
             </div>
           </div>
-        )}
+        </div>
 
-        {lesson && (
-          <div className="bg-white rounded-xl p-4 shadow-sm mb-6 border border-zinc-200">
-            <div className="text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-1">
-              Tactic learned:
-            </div>
-            <div className="font-medium text-zinc-900">{lesson}</div>
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-zinc-200 mb-6">
+          <h2 className="font-bold text-zinc-900 mb-1">Before you apply, check these things</h2>
+          <p className="text-sm text-zinc-600 mb-4">
+            The important question is not whether an offer looks polished. Check its destination, channel, data requests, payment timing, and pressure.
+          </p>
+          <div className="space-y-3">
+            {orderedChecklist.map((item, index) => {
+              const isRelevant = ad.relevantChecklistKeys.includes(item.key);
+              return (
+                <Collapsible
+                  key={item.key}
+                  defaultOpen={isRelevant}
+                  className="bg-zinc-50 rounded-xl border border-zinc-200 group"
+                >
+                  <CollapsibleTrigger className="w-full p-4 flex items-start gap-3 text-left cursor-pointer">
+                    <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-zinc-600 font-bold shrink-0 border border-zinc-200 text-sm">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-bold text-zinc-900">{item.title}</h3>
+                        {isRelevant && (
+                          <span className="text-[10px] uppercase tracking-wide font-semibold text-yellow-800 bg-yellow-100 px-2 py-0.5 rounded-full">
+                            Relevant here
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-zinc-600 text-sm leading-relaxed">{item.copy}</p>
+                    </div>
+                    <ChevronDown className="w-5 h-5 text-zinc-400 mt-1 shrink-0 transition-transform group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="px-4 pb-4 pl-14">
+                    <div className="border-t border-zinc-200 pt-3 space-y-3">
+                      <p className="text-sm text-zinc-700 leading-relaxed">{item.detail}</p>
+                      <div className="text-sm bg-yellow-50 border border-yellow-200 rounded-md p-3 text-yellow-900">
+                        <span className="font-semibold">{ad.title}:</span> {ad.checklistExamples[item.key]}
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              );
+            })}
           </div>
-        )}
+        </div>
 
-        {outcomeType === "unsafe" && (
-          <div className="bg-red-50 rounded-xl p-4 shadow-sm mb-6 border border-red-200">
-            <div className="text-xs uppercase tracking-wider text-red-700 font-semibold mb-2">
-              What could be lost:
-            </div>
-            <ul className="text-sm text-red-900 space-y-1 list-disc list-inside pl-4">
-              <li>Money</li>
-              <li>Identity documents</li>
-              <li>Phone number</li>
-              <li>Bank details</li>
-              <li>Control over the conversation</li>
-            </ul>
-          </div>
-        )}
-
-        {safeEvidence && (
-          <div
-            className={`rounded-xl p-4 shadow-sm mb-6 border ${
-              outcomeType === "safe-unverified"
-                ? "bg-yellow-50 border-yellow-200"
-                : "bg-blue-50 border-blue-200"
-            }`}
-          >
-            <div
-              className={`text-xs uppercase tracking-wider font-semibold mb-2 ${
-                outcomeType === "safe-unverified" ? "text-yellow-800" : "text-blue-800"
-              }`}
-            >
-              {safeEvidenceHeading}
-            </div>
-            <ul
-              className={`text-sm space-y-1 list-disc list-inside pl-4 ${
-                outcomeType === "safe-unverified" ? "text-yellow-900" : "text-blue-900"
-              }`}
-            >
-              {safeEvidence.map((s, i) => (
-                <li key={i}>{s}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        <div
-          className={`rounded-xl p-5 mb-8 border shadow-sm ${
-            type === "success"
-              ? "bg-green-50 border-green-200 text-green-800"
-              : type === "error"
-              ? "bg-red-50 border-red-200 text-red-800"
-              : type === "warning"
-              ? "bg-yellow-50 border-yellow-200 text-yellow-800"
-              : "bg-blue-50 border-blue-200 text-blue-800"
-          }`}
+        <Link
+          to="/board"
+          replace
+          onClick={inspection.resetAll}
+          className="w-full bg-[#E3B740] hover:bg-[#d6a935] text-zinc-900 py-4 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm"
         >
-          <div className="font-bold mb-1">Takeaway</div>
-          <div>{takeaway}</div>
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <Link
-            to="/"
-            replace
-            className={`w-full py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors ${
-              type === "error" || type === "warning"
-                ? "bg-[#E3B740] hover:bg-[#d6a935] text-zinc-900 shadow-sm"
-                : "bg-white border border-zinc-300 hover:bg-zinc-50 text-zinc-700 shadow-sm"
-            }`}
-          >
-            Back to start <ArrowRight className="w-5 h-5" />
-          </Link>
-          <Link
-            to="/checklist"
-            state={{ exampleAdId: ad.id }}
-            className="w-full bg-[#E3B740] hover:bg-[#d6a935] text-zinc-900 py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors mt-2 shadow-sm"
-          >
-            <ListChecks className="w-5 h-5" />
-            Show checklist
-          </Link>
-        </div>
+          Check another offer <ChevronRight className="w-5 h-5" />
+        </Link>
       </div>
     </div>
   );

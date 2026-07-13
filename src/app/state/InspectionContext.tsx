@@ -23,12 +23,15 @@ export interface SelectedInspectable {
   position: InspectablePosition;
 }
 
-interface AdInspectionState {
+export type Verdict = "scam" | "not-scam";
+
+export interface AdInspectionState {
   tapped: Set<string>;
   classifications: Record<string, TacticTag>;
   correct: Record<string, boolean>;
-  continuedDespiteRisk: boolean;
   selectedInspectable: SelectedInspectable | null;
+  activeHotspotId: string | null;
+  verdict: Verdict | null;
 }
 
 interface ContextValue {
@@ -38,7 +41,9 @@ interface ContextValue {
   selectInspectable: (adId: string, hotspotId: string, position: InspectablePosition) => void;
   clearSelectedInspectable: (adId: string, hotspotId?: string) => void;
   classify: (adId: string, hotspotId: string, choice: TacticTag) => void;
-  markContinued: (adId: string) => void;
+  startInspection: (adId: string) => void;
+  advance: (adId: string) => void;
+  decide: (adId: string, verdict: Verdict) => void;
   setLastAdId: (adId: string) => void;
   reset: (adId: string) => void;
   resetAll: () => void;
@@ -48,8 +53,9 @@ const createEmptyState = (): AdInspectionState => ({
   tapped: new Set(),
   classifications: {},
   correct: {},
-  continuedDespiteRisk: false,
   selectedInspectable: null,
+  activeHotspotId: null,
+  verdict: null,
 });
 
 const InspectionContext = createContext<ContextValue | null>(null);
@@ -58,7 +64,7 @@ export function InspectionProvider({ children }: { children: React.ReactNode }) 
   const [byAd, setByAd] = useState<Record<string, AdInspectionState>>({});
   const [lastAdId, setLastAdIdState] = useState<string | null>(null);
 
-  const ensure = (adId: string, prev: Record<string, AdInspectionState>): AdInspectionState =>
+  const ensure = (adId: string, prev: Record<string, AdInspectionState>) =>
     prev[adId] ?? createEmptyState();
 
   const tap = useCallback((adId: string, hotspotId: string) => {
@@ -72,16 +78,13 @@ export function InspectionProvider({ children }: { children: React.ReactNode }) 
 
   const selectInspectable = useCallback(
     (adId: string, hotspotId: string, position: InspectablePosition) => {
-      setByAd((prev) => {
-        const cur = ensure(adId, prev);
-        return {
-          ...prev,
-          [adId]: {
-            ...cur,
-            selectedInspectable: { hotspotId, position },
-          },
-        };
-      });
+      setByAd((prev) => ({
+        ...prev,
+        [adId]: {
+          ...ensure(adId, prev),
+          selectedInspectable: { hotspotId, position },
+        },
+      }));
     },
     []
   );
@@ -91,13 +94,7 @@ export function InspectionProvider({ children }: { children: React.ReactNode }) 
       const cur = ensure(adId, prev);
       if (!cur.selectedInspectable) return prev;
       if (hotspotId && cur.selectedInspectable.hotspotId !== hotspotId) return prev;
-      return {
-        ...prev,
-        [adId]: {
-          ...cur,
-          selectedInspectable: null,
-        },
-      };
+      return { ...prev, [adId]: { ...cur, selectedInspectable: null } };
     });
   }, []);
 
@@ -121,11 +118,40 @@ export function InspectionProvider({ children }: { children: React.ReactNode }) 
     });
   }, []);
 
-  const markContinued = useCallback((adId: string) => {
+  const startInspection = useCallback((adId: string) => {
     setByAd((prev) => {
       const cur = ensure(adId, prev);
-      return { ...prev, [adId]: { ...cur, continuedDespiteRisk: true } };
+      const ad = ads.find((item) => item.id === adId);
+      const firstHotspotId = ad?.hotspots[0]?.id ?? null;
+      return {
+        ...prev,
+        [adId]: {
+          ...cur,
+          activeHotspotId: cur.activeHotspotId ?? firstHotspotId,
+        },
+      };
     });
+  }, []);
+
+  const advance = useCallback((adId: string) => {
+    setByAd((prev) => {
+      const cur = ensure(adId, prev);
+      const ad = ads.find((item) => item.id === adId);
+      const currentIndex = ad?.hotspots.findIndex((h) => h.id === cur.activeHotspotId) ?? -1;
+      const nextHotspot = ad?.hotspots[currentIndex + 1];
+      return {
+        ...prev,
+        [adId]: {
+          ...cur,
+          activeHotspotId: nextHotspot?.id ?? null,
+          selectedInspectable: null,
+        },
+      };
+    });
+  }, []);
+
+  const decide = useCallback((adId: string, verdict: Verdict) => {
+    setByAd((prev) => ({ ...prev, [adId]: { ...ensure(adId, prev), verdict } }));
   }, []);
 
   const reset = useCallback((adId: string) => {
@@ -137,9 +163,7 @@ export function InspectionProvider({ children }: { children: React.ReactNode }) 
     setLastAdIdState(null);
   }, []);
 
-  const setLastAdId = useCallback((adId: string) => {
-    setLastAdIdState(adId);
-  }, []);
+  const setLastAdId = useCallback((adId: string) => setLastAdIdState(adId), []);
 
   const value = useMemo<ContextValue>(
     () => ({
@@ -149,7 +173,9 @@ export function InspectionProvider({ children }: { children: React.ReactNode }) 
       selectInspectable,
       clearSelectedInspectable,
       classify,
-      markContinued,
+      startInspection,
+      advance,
+      decide,
       setLastAdId,
       reset,
       resetAll,
@@ -161,7 +187,9 @@ export function InspectionProvider({ children }: { children: React.ReactNode }) 
       selectInspectable,
       clearSelectedInspectable,
       classify,
-      markContinued,
+      startInspection,
+      advance,
+      decide,
       setLastAdId,
       reset,
       resetAll,
@@ -180,6 +208,7 @@ export function useInspectionContext() {
 export function useAdInspection(adId: string) {
   const ctx = useInspectionContext();
   const state = ctx.byAd[adId] ?? createEmptyState();
+
   return useMemo(
     () => ({
       state,
@@ -189,15 +218,13 @@ export function useAdInspection(adId: string) {
       clearSelectedInspectable: (hotspotId?: string) =>
         ctx.clearSelectedInspectable(adId, hotspotId),
       classify: (hotspotId: string, choice: TacticTag) => ctx.classify(adId, hotspotId, choice),
-      markContinued: () => ctx.markContinued(adId),
+      startInspection: () => ctx.startInspection(adId),
+      advance: () => ctx.advance(adId),
+      decide: (verdict: Verdict) => ctx.decide(adId, verdict),
       reset: () => ctx.reset(adId),
       resetAll: ctx.resetAll,
       setActive: () => ctx.setLastAdId(adId),
     }),
-    [
-      state,
-      ctx,
-      adId,
-    ]
+    [state, ctx, adId]
   );
 }

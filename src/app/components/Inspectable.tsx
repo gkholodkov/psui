@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { type InspectablePosition, useAdInspection } from "../state/InspectionContext";
 import { ads, type TacticTag } from "../data";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, ChevronRight, XCircle } from "lucide-react";
 
 interface InspectableProps {
   adId: string;
@@ -13,16 +13,16 @@ interface InspectableProps {
 }
 
 export function Inspectable({ adId, hotspotId, active, children, className = "" }: InspectableProps) {
-  const ad = ads.find((a) => a.id === adId);
-  const hotspot = ad?.hotspots.find((h) => h.id === hotspotId);
-  const { state, tap, selectInspectable, clearSelectedInspectable, classify } = useAdInspection(adId);
+  const ad = ads.find((item) => item.id === adId);
+  const hotspot = ad?.hotspots.find((item) => item.id === hotspotId);
+  const { state, tap, selectInspectable, clearSelectedInspectable, classify, advance } =
+    useAdInspection(adId);
   const [open, setOpen] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
 
   const options = useMemo<TacticTag[]>(() => {
     if (!hotspot) return [];
-    const base: TacticTag[] = [hotspot.tactic, ...hotspot.distractors];
-    return base.sort((a, b) => a.localeCompare(b));
+    return [hotspot.tactic, ...hotspot.distractors].sort((a, b) => a.localeCompare(b));
   }, [hotspot]);
 
   useEffect(() => {
@@ -44,7 +44,6 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
 
     const scrollX = window.scrollX;
     const scrollY = window.scrollY;
-
     return {
       x: rect.x,
       y: rect.y,
@@ -74,6 +73,12 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
     }
   };
 
+  const handleNext = () => {
+    setOpen(false);
+    clearSelectedInspectable(hotspotId);
+    advance();
+  };
+
   if (!active) {
     return <div className={className}>{children}</div>;
   }
@@ -81,23 +86,27 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <button
+        <div
           ref={triggerRef}
-          type="button"
-          className={`relative text-left rounded-lg transition-all cursor-pointer ${
-            isTapped
-              ? "ring-2 ring-[#E3B740] ring-offset-2 ring-offset-white"
-              : "ring-2 ring-[#E3B740]/60 ring-offset-2 ring-offset-white animate-[pulse_2.2s_ease-in-out_infinite]"
-          } ${className}`}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              handleOpenChange(true);
+            }
+          }}
+          className={`relative text-left rounded-lg transition-all cursor-pointer ring-2 ring-[#E3B740]/80 ring-offset-2 ring-offset-white animate-[pulse_2.2s_ease-in-out_infinite] ${className}`}
           aria-label={`Inspect: ${hotspot.label}`}
         >
           {children}
-        </button>
+        </div>
       </PopoverTrigger>
+      {open && <div className="fixed inset-0 z-[100] bg-zinc-900/20 backdrop-blur-sm" aria-hidden="true" />}
       <PopoverContent
         sideOffset={10}
         collisionPadding={{ top: 96, bottom: 144, left: 16, right: 16 }}
-        className="z-[110] w-80 p-0 overflow-hidden border-zinc-200 bg-white"
+        className="z-[110] w-[min(22rem,calc(100vw-2rem))] p-0 overflow-hidden border-zinc-200 bg-white shadow-2xl"
       >
         <div className="p-4 border-b border-zinc-200">
           <div className="text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-1">
@@ -142,15 +151,27 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
             })}
           </div>
           {chosen !== undefined && (
-            <div
-              className={`mt-3 text-sm rounded-md p-3 border ${
-                isCorrect
-                  ? "bg-green-50 border-green-200 text-green-800"
-                  : "bg-yellow-50 border-yellow-200 text-yellow-900"
-              }`}
-            >
-              {isCorrect ? hotspot.correctFeedback : hotspot.incorrectFeedback}
-            </div>
+            <>
+              <div
+                className={`mt-3 text-sm rounded-md p-3 border ${
+                  isCorrect
+                    ? "bg-green-50 border-green-200 text-green-800"
+                    : "bg-yellow-50 border-yellow-200 text-yellow-900"
+                }`}
+              >
+                {isCorrect ? hotspot.correctFeedback : hotspot.incorrectFeedback}
+              </div>
+              <button
+                type="button"
+                onClick={handleNext}
+                className="mt-3 w-full bg-[#E3B740] hover:bg-[#d6a935] text-zinc-900 px-3 py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2"
+              >
+                {state.activeHotspotId === ad?.hotspots[ad.hotspots.length - 1]?.id
+                  ? "Finish inspection"
+                  : "Next cue"}
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </>
           )}
         </div>
       </PopoverContent>

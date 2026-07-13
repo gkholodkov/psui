@@ -9,8 +9,11 @@ export function Board() {
   return (
     <div className="min-h-screen bg-[#F5F5F5] pb-20">
       <div className="bg-white text-zinc-900 p-6 shadow-sm text-center sticky top-0 z-10 border-b border-zinc-200">
-        <h1 className="text-2xl font-bold mb-2">Which room would you check first?</h1>
+        <h1 className="text-3xl md:text-4xl font-bold mb-2">Which room would you check first?</h1>
         <p className="text-zinc-600">3 offers. 45 seconds. One could cost you more than rent.</p>
+        <p className="text-sm text-zinc-600 max-w-xl mx-auto mt-3">
+          Before you apply, check where the link goes, what data it asks for, when payment happens, and whether you are being rushed.
+        </p>
         <div className="flex items-center justify-center gap-3 text-[11px] text-zinc-500 mt-3">
           <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> No login</span>
           <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> No typing</span>
@@ -26,6 +29,7 @@ export function Board() {
             <Link
               key={ad.id} 
               to={`/ad/${ad.id}`}
+              replace
               aria-label={`${ad.cta}: ${ad.title}`}
               className={`rounded-2xl overflow-hidden flex flex-col shadow-md transition-transform hover:-translate-y-1 focus-visible:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#E3B740] bg-white border ${
                 ad.id === "B" ? "border-[#E3B740] shadow-[#E3B740]/20" : "border-zinc-200"
@@ -65,7 +69,7 @@ export function Board() {
                     "bg-zinc-100 hover:bg-zinc-200 text-zinc-800"
                   }`}
                 >
-                  {ad.cta}
+                  View offer
                 </span>
               </div>
             </Link>
