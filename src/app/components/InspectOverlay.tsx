@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useRef } from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { ads } from "../data";
 import { useAdInspection } from "../state/InspectionContext";
 import { ChevronRight, X, Search, ExternalLink } from "lucide-react";
@@ -12,9 +12,10 @@ interface InspectOverlayProps {
 export function InspectOverlay({ adId, onClose }: InspectOverlayProps) {
   const ad = ads.find((a) => a.id === adId);
   const { state, clearSelectedInspectable } = useAdInspection(adId);
+  const { pathname } = useLocation();
   const topOverlayRef = useRef<HTMLDivElement>(null);
-  const bottomOverlayRef = useRef<HTMLDivElement>(null);
   const selectedPosition = state.selectedInspectable?.position ?? null;
+  const isFormPage = pathname.endsWith("/form");
 
   useLayoutEffect(() => {
     if (!selectedPosition) return;
@@ -57,7 +58,6 @@ export function InspectOverlay({ adId, onClose }: InspectOverlayProps) {
 
     const getScrollRanges = () => {
       const topHeight = topOverlayRef.current?.getBoundingClientRect().height ?? 0;
-      const bottomHeight = bottomOverlayRef.current?.getBoundingClientRect().height ?? 0;
       const maxScrollY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
       const maxScrollX = Math.max(0, document.documentElement.scrollWidth - window.innerWidth);
 
@@ -75,7 +75,7 @@ export function InspectOverlay({ adId, onClose }: InspectOverlayProps) {
           selectedPosition.documentBottom,
           selectedPosition.height,
           topHeight + margin,
-          window.innerHeight - bottomHeight - margin,
+          window.innerHeight - margin,
           maxScrollY
         ),
       };
@@ -245,10 +245,9 @@ export function InspectOverlay({ adId, onClose }: InspectOverlayProps) {
         </div>
       </div>
 
-      {/* Bottom progress + continue */}
+      {/* Progress and actions sit in page flow after the inspected content. */}
       <div
-        ref={bottomOverlayRef}
-        className="fixed bottom-0 left-0 right-0 z-[90] bg-white/95 backdrop-blur-md border-t border-zinc-200 px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-10px_40px_rgba(0,0,0,0.10)]"
+        className="w-full bg-white/95 backdrop-blur-md border-t border-zinc-200 px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-10px_40px_rgba(0,0,0,0.10)]"
       >
         <div className="w-full flex flex-col gap-3">
           <div>
@@ -262,14 +261,16 @@ export function InspectOverlay({ adId, onClose }: InspectOverlayProps) {
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <Link
-              to={`/ad/${ad.id}/form`}
-              onClick={handleClose}
-              className="min-h-11 px-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border border-zinc-200 transition-colors"
-            >
-              <ExternalLink className="w-4 h-4 shrink-0" /> <span className="truncate">Open link</span>
-            </Link>
+          <div className={`grid gap-2 ${isFormPage ? "grid-cols-1" : "grid-cols-2"}`}>
+            {!isFormPage && (
+              <Link
+                to={`/ad/${ad.id}/form`}
+                onClick={handleClose}
+                className="min-h-11 px-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border border-zinc-200 transition-colors"
+              >
+                <ExternalLink className="w-4 h-4 shrink-0" /> <span className="truncate">Open link</span>
+              </Link>
+            )}
             <Link
               to={`/ad/${ad.id}/evidence`}
               onClick={handleClose}

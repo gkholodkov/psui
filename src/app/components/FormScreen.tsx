@@ -95,9 +95,7 @@ export function FormScreen() {
 
       {/* Page Content */}
       <div
-        className={`w-full px-4 pt-4 md:px-8 md:pt-8 ${
-          isInspecting ? "pb-[calc(14rem+env(safe-area-inset-bottom))]" : "pb-4"
-        }`}
+        className="w-full px-4 pt-4 pb-4 md:px-8 md:pt-8"
       >
         <div className="w-full bg-white rounded-xl shadow-md border border-zinc-200 overflow-hidden">
           <div className="p-6 border-b border-zinc-200">
