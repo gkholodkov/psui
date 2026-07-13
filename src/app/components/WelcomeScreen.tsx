@@ -6,7 +6,7 @@ import { ImageWithFallback } from "./figma/ImageWithFallback";
 export function WelcomeScreen() {
   return (
     <div className="min-h-screen bg-[#F5F5F5] flex flex-col font-sans">
-      <div className="flex flex-col max-w-[700px] mx-auto w-full pt-20 px-10 relative z-10">
+      <div className="flex flex-col w-full pt-20 px-10 relative z-10">
         <h1 className="text-[3.5rem] leading-[1.1] font-semibold text-zinc-900 mb-8 tracking-tight">
           Cheap room
           <br />
@@ -37,7 +37,7 @@ export function WelcomeScreen() {
       </div>
       
       {/* Background Room Image Area - Flex-1 makes it fill tall screens like 2000px */}
-      <div className="w-full max-w-[700px] mx-auto relative flex-1 min-h-[300px] -mt-20 z-0 flex flex-col">
+      <div className="w-full relative flex-1 min-h-[300px] -mt-20 z-0 flex flex-col">
         <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#F5F5F5] to-transparent z-10" />
         <ImageWithFallback 
           src="https://images.unsplash.com/photo-1625585598750-3535fe40efb3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlbXB0eSUyMHJvb20lMjB5ZWxsb3clMjBhcm1jaGFpciUyMHBsYW50fGVufDF8fHx8MTc4MDY1OTc0MXww&ixlib=rb-4.1.0&q=80&w=1080" 
@@ -46,7 +46,7 @@ export function WelcomeScreen() {
         />
       </div>
 
-      <div className="w-full bg-white py-8 px-10 text-center max-w-[700px] mx-auto z-20">
+      <div className="w-full bg-white py-8 px-10 text-center z-20">
         <p className="text-zinc-600 font-medium text-lg">
           Protect yourself. Verify before<br />
           you click, pay or share documents.

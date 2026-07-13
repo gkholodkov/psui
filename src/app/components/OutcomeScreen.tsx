@@ -93,7 +93,7 @@ export function OutcomeScreen() {
 
   return (
     <div className="min-h-screen flex flex-col justify-center p-6 bg-[#F5F5F5] text-zinc-900">
-      <div className="max-w-[700px] mx-auto w-full">
+      <div className="w-full">
         <div className="text-center mb-8 flex flex-col items-center">
           {type === "success" && <CheckCircle className="w-16 h-16 text-green-600 mb-4" />}
           {type === "error" && <XCircle className="w-16 h-16 text-red-600 mb-4" />}

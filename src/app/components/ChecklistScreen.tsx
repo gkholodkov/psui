@@ -39,7 +39,7 @@ export function ChecklistScreen() {
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] text-zinc-900 p-6 flex flex-col">
-      <div className="max-w-[700px] mx-auto w-full flex-1 flex flex-col">
+      <div className="w-full flex-1 flex flex-col">
         <div className="text-center mb-8 mt-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-yellow-50 text-yellow-600 rounded-2xl mb-6 border border-yellow-200">
             <CheckSquare className="w-8 h-8" />

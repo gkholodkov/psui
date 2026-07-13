@@ -227,7 +227,7 @@ export function InspectOverlay({ adId, onClose }: InspectOverlayProps) {
         ref={topOverlayRef}
         className="fixed top-0 left-0 right-0 z-[90] bg-white/95 backdrop-blur-md border-b border-[#E3B740] shadow-md"
       >
-        <div className="max-w-[700px] mx-auto px-4 py-3 flex items-start gap-3">
+        <div className="w-full px-4 py-3 flex items-start gap-3">
           <div className="mt-1 w-8 h-8 rounded-full bg-[#E3B740]/20 flex items-center justify-center shrink-0">
             <Search className="w-4 h-4 text-[#b8912e]" />
           </div>
@@ -250,7 +250,7 @@ export function InspectOverlay({ adId, onClose }: InspectOverlayProps) {
         ref={bottomOverlayRef}
         className="fixed bottom-0 left-0 right-0 z-[90] bg-white/95 backdrop-blur-md border-t border-zinc-200 px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-10px_40px_rgba(0,0,0,0.10)]"
       >
-        <div className="max-w-[700px] mx-auto flex flex-col gap-3">
+        <div className="w-full flex flex-col gap-3">
           <div>
             <div className="text-xs font-medium text-zinc-500 mb-1">
               {answeredCount} of {total} elements inspected

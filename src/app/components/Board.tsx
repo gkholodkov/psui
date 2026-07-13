@@ -18,14 +18,16 @@ export function Board() {
         </div>
       </div>
       
-      <div className="max-w-[700px] mx-auto p-6 mt-6">
+      <div className="w-full p-6 mt-6">
         <MangoBubble text="Pick any ad. I'll only explain after you decide." />
         
         <div className="grid grid-cols-1 gap-6 mt-8">
           {ads.map((ad) => (
-            <div 
+            <Link
               key={ad.id} 
-              className={`rounded-2xl overflow-hidden flex flex-col shadow-md transition-transform hover:-translate-y-1 bg-white border ${
+              to={`/ad/${ad.id}`}
+              aria-label={`${ad.cta}: ${ad.title}`}
+              className={`rounded-2xl overflow-hidden flex flex-col shadow-md transition-transform hover:-translate-y-1 focus-visible:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#E3B740] bg-white border ${
                 ad.id === "B" ? "border-[#E3B740] shadow-[#E3B740]/20" : "border-zinc-200"
               }`}
             >
@@ -57,17 +59,16 @@ export function Board() {
                   ))}
                 </ul>
                 
-                <Link 
-                  to={`/ad/${ad.id}`} 
+                <span
                   className={`block w-full py-3 text-center rounded-xl font-semibold transition-colors ${
                     ad.id === "B" ? "bg-[#E3B740] hover:bg-[#d6a935] text-zinc-900" :
                     "bg-zinc-100 hover:bg-zinc-200 text-zinc-800"
                   }`}
                 >
                   {ad.cta}
-                </Link>
+                </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

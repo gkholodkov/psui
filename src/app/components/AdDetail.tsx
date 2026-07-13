@@ -38,7 +38,7 @@ export function AdDetail() {
         <span className="ml-2 font-medium text-zinc-900">Board</span>
       </div>
 
-      <div className={`max-w-[700px] mx-auto p-4 py-8 ${isInspecting ? "pt-24 pb-40" : ""}`}>
+      <div className={`w-full p-4 py-8 ${isInspecting ? "pt-24 pb-40" : ""}`}>
         <div className={`bg-white rounded-2xl shadow-sm border overflow-hidden mb-8 ${
           ad.id === "B" ? "border-[#E3B740]" : "border-zinc-200"
         }`}>

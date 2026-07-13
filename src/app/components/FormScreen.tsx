@@ -95,11 +95,11 @@ export function FormScreen() {
 
       {/* Page Content */}
       <div
-        className={`flex-1 px-4 pt-4 md:px-8 md:pt-8 ${
-          isInspecting ? "pb-[calc(14rem+env(safe-area-inset-bottom))]" : "pb-8"
+        className={`w-full px-4 pt-4 md:px-8 md:pt-8 ${
+          isInspecting ? "pb-[calc(14rem+env(safe-area-inset-bottom))]" : "pb-4"
         }`}
       >
-        <div className="max-w-[700px] mx-auto bg-white rounded-xl shadow-md border border-zinc-200 overflow-hidden">
+        <div className="w-full bg-white rounded-xl shadow-md border border-zinc-200 overflow-hidden">
           <div className="p-6 border-b border-zinc-200">
             <h1 className="text-2xl font-bold text-zinc-900 mb-2">{ad.formTitle}</h1>
             {ad.formBadge && (
@@ -154,8 +154,8 @@ export function FormScreen() {
 
       {/* Decision Footer */}
       {!isInspecting && (
-        <div className="px-4 md:px-8 pb-8">
-          <div className="max-w-[700px] mx-auto bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
+        <div className="w-full px-4 md:px-8 pb-8">
+          <div className="w-full bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
             <div className="text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-3 text-center">
               Choose next action
             </div>

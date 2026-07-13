@@ -22,10 +22,13 @@ export function EvidenceScreen() {
 
   const continueRoute = isSafe ? "safe-apply" : "unsafe-after-inspect";
   const rejectRoute = isSafe ? "false-positive" : "safe";
+  const evidenceGuidance = isSafe
+    ? "These signals support proceeding cautiously; they are not a guarantee."
+    : "These signals should stop the process before you share data or money.";
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] pb-12 text-zinc-900">
-      <div className="max-w-[700px] mx-auto p-4 py-8">
+      <div className="w-full p-4 py-8">
         <h1 className="text-3xl font-bold text-zinc-900 mb-6 text-center">Evidence summary</h1>
 
         <div
@@ -144,15 +147,18 @@ export function EvidenceScreen() {
 
         {/* Evidence table */}
         <div className="bg-white rounded-2xl shadow-sm border border-zinc-200 overflow-hidden mb-8">
-          <div className="px-4 py-3 border-b border-zinc-200 bg-zinc-50 text-xs font-semibold text-zinc-600 uppercase tracking-wider">
-            Evidence breakdown
+          <div className="px-4 py-3 border-b border-zinc-200 bg-zinc-50">
+            <div className="text-xs font-semibold text-zinc-600 uppercase tracking-wider">Evidence breakdown</div>
+            <p className={`mt-1 text-xs normal-case tracking-normal font-normal ${isSafe ? "text-green-700" : "text-red-700"}`}>
+              {evidenceGuidance}
+            </p>
           </div>
           <table className="w-full text-sm text-left">
             <thead className="bg-white text-zinc-600 font-medium border-b border-zinc-200">
               <tr>
-                <th className="px-4 py-3">Cue</th>
+                <th className="px-4 py-3">Signal</th>
                 <th className="px-4 py-3">Evidence</th>
-                <th className="px-4 py-3">Interpretation</th>
+                <th className="px-4 py-3">Why it matters</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200">
@@ -172,7 +178,7 @@ export function EvidenceScreen() {
 
       {/* Action footer */}
       <div className="px-4">
-        <div className="max-w-[700px] mx-auto bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm">
+        <div className="w-full bg-white border border-zinc-200 rounded-2xl p-5 shadow-sm">
           <div className="text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-3 text-center">
             Choose next action
           </div>
