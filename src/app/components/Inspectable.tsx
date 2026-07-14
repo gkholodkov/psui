@@ -37,6 +37,7 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
   const chosen = state.classifications[hotspotId];
   const isCorrect = state.correct[hotspotId];
   const isTapped = state.tapped.has(hotspotId);
+  const cueNumber = (ad?.inspectionOrder.indexOf(hotspotId) ?? -1) + 1;
 
   const getInspectablePosition = (): InspectablePosition | null => {
     const rect = triggerRef.current?.getBoundingClientRect();
@@ -70,13 +71,14 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
       if (position) selectInspectable(hotspotId, position);
     } else {
       clearSelectedInspectable(hotspotId);
+      if (chosen !== undefined) {
+        advance();
+      }
     }
   };
 
   const handleNext = () => {
-    setOpen(false);
-    clearSelectedInspectable(hotspotId);
-    advance();
+    handleOpenChange(false);
   };
 
   if (!active) {
@@ -99,7 +101,17 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
           className={`relative text-left rounded-lg transition-all cursor-pointer ring-2 ring-[#E3B740]/80 ring-offset-2 ring-offset-white animate-[pulse_2.2s_ease-in-out_infinite] ${className}`}
           aria-label={`Inspect: ${hotspot.label}`}
         >
-          {children}
+          <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+            <div className="min-w-0">{children}</div>
+            {!open && cueNumber > 0 && (
+              <span className="pointer-events-none inline-flex shrink-0 items-center justify-self-end gap-2 whitespace-nowrap rounded-full border-2 border-[#b8912e] bg-zinc-900 px-2 py-1.5 text-xs font-bold leading-none text-white shadow-xl">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#E3B740] text-sm font-bold text-zinc-900">
+                  {cueNumber}
+                </span>
+                <span>Click me</span>
+              </span>
+            )}
+          </div>
         </div>
       </PopoverTrigger>
       {open && <div className="fixed inset-0 z-[100] bg-zinc-900/20 backdrop-blur-sm" aria-hidden="true" />}
