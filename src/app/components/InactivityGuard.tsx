@@ -31,6 +31,7 @@ export function InactivityGuard() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { resetAll } = useInspectionContext();
+  const isRootPage = pathname === "/";
   const [isPromptOpen, setIsPromptOpen] = useState(false);
   const [secondsRemaining, setSecondsRemaining] = useState(AUTO_RETURN_TIMEOUT_MS / 1000);
   const inactivityTimerRef = useRef<number | null>(null);
@@ -70,6 +71,13 @@ export function InactivityGuard() {
   }, [scheduleInactivityPrompt]);
 
   useEffect(() => {
+    if (isRootPage) {
+      promptOpenRef.current = false;
+      setIsPromptOpen(false);
+      clearInactivityTimer();
+      return;
+    }
+
     const handleActivity = () => {
       if (!promptOpenRef.current) {
         scheduleInactivityPrompt();
@@ -87,13 +95,15 @@ export function InactivityGuard() {
       });
       clearInactivityTimer();
     };
-  }, [clearInactivityTimer, scheduleInactivityPrompt]);
+  }, [clearInactivityTimer, isRootPage, scheduleInactivityPrompt]);
 
   useEffect(() => {
-    if (!promptOpenRef.current) {
+    if (isRootPage) {
+      clearInactivityTimer();
+    } else if (!promptOpenRef.current) {
       scheduleInactivityPrompt();
     }
-  }, [pathname, scheduleInactivityPrompt]);
+  }, [clearInactivityTimer, isRootPage, pathname, scheduleInactivityPrompt]);
 
   useEffect(() => {
     if (!isPromptOpen) return;
