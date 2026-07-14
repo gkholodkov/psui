@@ -10,7 +10,7 @@ import {
 } from "./ui/alert-dialog";
 import { useInspectionContext } from "../state/InspectionContext";
 
-const INACTIVITY_TIMEOUT_MS = 30_000;
+const INACTIVITY_TIMEOUT_MS = 120_000;
 const AUTO_RETURN_TIMEOUT_MS = 90_000;
 
 const ACTIVITY_EVENTS: Array<keyof WindowEventMap> = [
@@ -129,7 +129,7 @@ export function InactivityGuard() {
     <AlertDialog open={isPromptOpen}>
       <AlertDialogContent className="max-w-md border-zinc-200 bg-white">
         <AlertDialogHeader>
-          <AlertDialogTitle>You&apos;ve been inactive for 30 seconds</AlertDialogTitle>
+          <AlertDialogTitle>You&apos;ve been inactive for 2 minutes</AlertDialogTitle>
           <AlertDialogDescription>
             Do you want to continue? Your session will return to the start page automatically in{" "}
             <span className="font-semibold text-zinc-900">{formatRemainingTime(secondsRemaining)}</span>{" "}

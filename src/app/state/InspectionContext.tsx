@@ -36,6 +36,7 @@ export interface AdInspectionState {
 
 interface ContextValue {
   byAd: Record<string, AdInspectionState>;
+  completedAdIds: Set<string>;
   lastAdId: string | null;
   tap: (adId: string, hotspotId: string) => void;
   selectInspectable: (adId: string, hotspotId: string, position: InspectablePosition) => void;
@@ -44,6 +45,7 @@ interface ContextValue {
   startInspection: (adId: string) => void;
   advance: (adId: string) => void;
   decide: (adId: string, verdict: Verdict) => void;
+  completeAd: (adId: string) => void;
   setLastAdId: (adId: string) => void;
   reset: (adId: string) => void;
   resetAll: () => void;
@@ -62,6 +64,7 @@ const InspectionContext = createContext<ContextValue | null>(null);
 
 export function InspectionProvider({ children }: { children: React.ReactNode }) {
   const [byAd, setByAd] = useState<Record<string, AdInspectionState>>({});
+  const [completedAdIds, setCompletedAdIds] = useState<Set<string>>(new Set());
   const [lastAdId, setLastAdIdState] = useState<string | null>(null);
 
   const ensure = (adId: string, prev: Record<string, AdInspectionState>) =>
@@ -155,12 +158,22 @@ export function InspectionProvider({ children }: { children: React.ReactNode }) 
     setByAd((prev) => ({ ...prev, [adId]: { ...ensure(adId, prev), verdict } }));
   }, []);
 
+  const completeAd = useCallback((adId: string) => {
+    setCompletedAdIds((prev) => {
+      if (prev.has(adId)) return prev;
+      const next = new Set(prev);
+      next.add(adId);
+      return next;
+    });
+  }, []);
+
   const reset = useCallback((adId: string) => {
     setByAd((prev) => ({ ...prev, [adId]: createEmptyState() }));
   }, []);
 
   const resetAll = useCallback(() => {
     setByAd({});
+    setCompletedAdIds(new Set());
     setLastAdIdState(null);
   }, []);
 
@@ -169,6 +182,7 @@ export function InspectionProvider({ children }: { children: React.ReactNode }) 
   const value = useMemo<ContextValue>(
     () => ({
       byAd,
+      completedAdIds,
       lastAdId,
       tap,
       selectInspectable,
@@ -177,12 +191,14 @@ export function InspectionProvider({ children }: { children: React.ReactNode }) 
       startInspection,
       advance,
       decide,
+      completeAd,
       setLastAdId,
       reset,
       resetAll,
     }),
     [
       byAd,
+      completedAdIds,
       lastAdId,
       tap,
       selectInspectable,
@@ -191,6 +207,7 @@ export function InspectionProvider({ children }: { children: React.ReactNode }) 
       startInspection,
       advance,
       decide,
+      completeAd,
       setLastAdId,
       reset,
       resetAll,
@@ -209,6 +226,8 @@ export function useInspectionContext() {
 export function useAdInspection(adId: string) {
   const ctx = useInspectionContext();
   const state = ctx.byAd[adId] ?? createEmptyState();
+  const isCompleted = ctx.completedAdIds.has(adId);
+  const sessionComplete = ctx.completedAdIds.size >= ads.length;
 
   return useMemo(
     () => ({
@@ -222,10 +241,14 @@ export function useAdInspection(adId: string) {
       startInspection: () => ctx.startInspection(adId),
       advance: () => ctx.advance(adId),
       decide: (verdict: Verdict) => ctx.decide(adId, verdict),
+      complete: () => ctx.completeAd(adId),
+      isCompleted,
+      completedAdIds: ctx.completedAdIds,
+      sessionComplete,
       reset: () => ctx.reset(adId),
       resetAll: ctx.resetAll,
       setActive: () => ctx.setLastAdId(adId),
     }),
-    [state, ctx, adId]
+    [state, ctx, adId, isCompleted, sessionComplete]
   );
 }

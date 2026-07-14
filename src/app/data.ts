@@ -31,9 +31,16 @@ export interface Hotspot {
 }
 
 export interface Evidence {
-  cue: string;
+  label: string;
   evidence: string;
   interpretation: string;
+}
+
+export type ListingFactIcon = "location" | "home" | "calendar" | "viewing" | "payment";
+
+export interface ListingFact {
+  icon: ListingFactIcon;
+  text: string;
 }
 
 export interface FormField {
@@ -52,6 +59,7 @@ export interface Ad {
   title: string;
   price: string;
   features: string[];
+  cardFacts: ListingFact[];
   description: string;
   details: Record<string, string>;
   cta: string;
@@ -82,6 +90,11 @@ export const ads: Ad[] = [
     title: "Studio near campus",
     price: "€430 warm",
     features: ["4 min to Mensa", "Viewing slots available today", "Reserve through secure booking"],
+    cardFacts: [
+      { icon: "location", text: "Near central campus" },
+      { icon: "calendar", text: "Available immediately" },
+      { icon: "viewing", text: "Viewing slots today" },
+    ],
     description: "Bright furnished studio, 4 min walk to Mensa. All utilities included. Suitable for exchange students.\n\nBecause I receive too many messages here, viewing requests are handled through the secure reservation page. You can select a viewing slot after confirming your student status.",
     details: {
       "Price": "€430 warm",
@@ -106,22 +119,22 @@ export const ads: Ad[] = [
     hotspots: [
       {
         id: "h1",
-        label: "External reservation link",
+        label: "Reservation handled externally",
         feedback: "This ad quietly moves you off the housing board and onto a third-party domain. The moment you leave the platform, it becomes much harder to verify who is behind the request.",
         mandatory: false,
         tactic: "Brand impersonation",
         correctFeedback: "That’s it. ‘secure-viewing.example’ sounds official, but it is not the housing board. A familiar-looking name can still be a disguise.",
-        incorrectFeedback: "The important clue is the destination. This page borrows the feel of a trusted booking route while sending you somewhere else.",
+        incorrectFeedback: "The important detail is the destination. This page borrows the feel of a trusted booking route while sending you somewhere else.",
         distractors: ["Verified route", "Safe payment timing"],
       },
       {
         id: "h2",
-        label: "URL with redirect parameters",
+        label: "secure-viewing.example/r/ka?listing=24891&src=board&utm=student",
         feedback: "Look past the reassuring label: this domain is not the housing platform. The listing, src, and utm parameters are not automatically malicious, but they make the real destination worth checking.",
         mandatory: true,
         tactic: "Brand impersonation",
         correctFeedback: "You caught the disguise. The URL looks like a normal listing link, but it leads to a third-party destination — a classic impersonation signal.",
-        incorrectFeedback: "That’s a reasonable concern, but this cue is about where the link leads, not about urgency or money. Read the domain before you follow the promise.",
+        incorrectFeedback: "That’s a reasonable concern, but this detail is about where the link leads, not about urgency or money. Read the domain before you follow the promise.",
         distractors: ["Scarcity pressure", "Advance payment"],
       },
       {
@@ -141,7 +154,7 @@ export const ads: Ad[] = [
         mandatory: true,
         tactic: "Platform switching",
         correctFeedback: "Exactly. Moving to WhatsApp removes an important safety net. If something goes wrong, there is less evidence and less help.",
-        incorrectFeedback: "This clue is about the channel, not the documents or payment. When a listing pulls you into a private conversation, pause before you follow.",
+        incorrectFeedback: "This detail is about the channel, not the documents or payment. When a listing pulls you into a private conversation, pause before you follow.",
         distractors: ["Data overcollection", "Safe payment timing"],
       },
       {
@@ -151,7 +164,7 @@ export const ads: Ad[] = [
         mandatory: false,
         tactic: "Not enough evidence",
         correctFeedback: "Good read. A low price can raise your eyebrows, but it cannot prove a scam by itself. Let the route and requests do the heavier work.",
-        incorrectFeedback: "The price is a clue, not the trap. The stronger warnings here are the external route, early ID request, and WhatsApp handoff.",
+        incorrectFeedback: "The price is a signal, not the trap. The stronger warnings here are the external route, early ID request, and WhatsApp handoff.",
         distractors: ["Advance payment", "Scarcity pressure"],
       },
       {
@@ -176,12 +189,12 @@ export const ads: Ad[] = [
       }
     ],
     inspectionOrder: ["h2", "h1", "h5", "h6", "h7", "h3", "h4"],
-    inspectInstruction: "Start at the top and follow each cue downward. Check the destination before you trust the form.",
+    inspectInstruction: "Start at the top and follow each highlighted detail. Check the destination before you trust the form.",
     evidenceVerdict: "This route looks polished, but it takes you away from the accountable platform and asks for sensitive information too early.",
     evidenceList: [
-      { cue: "URL/domain", evidence: "secure-viewing.example/r/ka?...", interpretation: "The link leaves the verified platform and hides behind a convincing name" },
-      { cue: "Platform switch", evidence: "Continue to WhatsApp confirmation", interpretation: "The conversation leaves the platform’s record and protections" },
-      { cue: "Data request", evidence: "Upload student ID before viewing", interpretation: "A sensitive document is requested before the room is even shown" }
+      { label: "URL/domain", evidence: "secure-viewing.example/r/ka?...", interpretation: "The link leaves the verified platform and hides behind a convincing name" },
+      { label: "Platform switch", evidence: "Continue to WhatsApp confirmation", interpretation: "The conversation leaves the platform’s record and protections" },
+      { label: "Data request", evidence: "Upload student ID before viewing", interpretation: "A sensitive document is requested before the room is even shown" }
     ],
     outcomeSafeTactic: "Brand impersonation + platform switching",
     outcomeUnsafeBody: "If you continued, you would hand over a student ID and move the conversation somewhere the original platform could not help you.",
@@ -202,7 +215,12 @@ export const ads: Ad[] = [
     image: "https://images.unsplash.com/photo-1564273795917-fe399b763988?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb3p5JTIwc3R1ZGVudCUyMHJvb20lMjB5ZWxsb3clMjBsaWdodHxlbnwxfHx8fDE3ODA1OTI5MzF8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "WG room in Südstadt",
     price: "€520 warm",
-    features: ["14 min by bike", "Pre-check required before viewing", "2 slots left this week"],
+    features: ["Südstadt · 14 min by bike to campus", "Pre-check required before viewing", "2 slots left this week"],
+    cardFacts: [
+      { icon: "location", text: "Südstadt · 14 min by bike to campus" },
+      { icon: "home", text: "3-person shared flat" },
+      { icon: "calendar", text: "Available next week" },
+    ],
     description: "Room in friendly 3-person WG. 14 min by bike to campus. We are choosing someone quickly because the room is available next week.\n\nTo avoid no-shows, please complete the tenant pre-check before viewing. After the pre-check, I will send the exact address and viewing time.",
     details: {
       "Price": "€520 warm",
@@ -233,7 +251,7 @@ export const ads: Ad[] = [
         mandatory: true,
         tactic: "Scarcity pressure",
         correctFeedback: "You spotted the pressure. The badge turns a normal viewing request into a race, hoping you will stop asking questions.",
-        incorrectFeedback: "This cue is about the countdown feeling created by the badge. The passport, IBAN, and deposit each tell a different part of the story.",
+        incorrectFeedback: "This detail is about the countdown feeling created by the badge. The passport, IBAN, and deposit each tell a different part of the story.",
         distractors: ["Data overcollection", "Verified route"],
       },
       {
@@ -248,7 +266,7 @@ export const ads: Ad[] = [
       },
       {
         id: "h3",
-        label: "Refundable holding deposit",
+        label: "Refundable holding deposit: €250",
         feedback: "A deposit before a viewing or written contract puts your money at risk before you know what you are paying for. Calling it ‘refundable’ does not change the timing.",
         mandatory: true,
         tactic: "Advance payment",
@@ -263,7 +281,7 @@ export const ads: Ad[] = [
         mandatory: true,
         tactic: "Data overcollection",
         correctFeedback: "You caught it. Bank details are being used as ‘identity confirmation’ before there is any legitimate transaction — that is data overcollection.",
-        incorrectFeedback: "This cue is about sensitive data, not payment timing. An IBAN should not be the price of getting a viewing.",
+        incorrectFeedback: "This detail is about sensitive data, not payment timing. An IBAN should not be the price of getting a viewing.",
         distractors: ["Safe payment timing", "Verified route"],
       },
       {
@@ -301,9 +319,9 @@ export const ads: Ad[] = [
     inspectInstruction: "Read the form from top to bottom. Notice what it asks you to share or pay before a viewing.",
     evidenceVerdict: "The friendly presentation hides a risky process: sensitive data and a deposit are requested before you have seen the room.",
     evidenceList: [
-      { cue: "Payment timing", evidence: "€250 before viewing", interpretation: "Money is requested before you can assess the room or sign a contract" },
-      { cue: "Data request", evidence: "Passport + IBAN", interpretation: "Identity and bank details are collected before they are needed" },
-      { cue: "Urgency/scarcity", evidence: "2 slots left this week", interpretation: "A countdown feeling makes skipping checks seem tempting" }
+      { label: "Payment timing", evidence: "€250 before viewing", interpretation: "Money is requested before you can assess the room or sign a contract" },
+      { label: "Data request", evidence: "Passport + IBAN", interpretation: "Identity and bank details are collected before they are needed" },
+      { label: "Urgency/scarcity", evidence: "2 slots left this week", interpretation: "A countdown feeling makes skipping checks seem tempting" }
     ],
     outcomeSafeTactic: "Data overcollection + advance payment",
     outcomeUnsafeBody: "If you submitted the form, you would share a passport or ID, an IBAN, and a holding deposit before seeing the room.",
@@ -325,10 +343,16 @@ export const ads: Ad[] = [
     title: "Room in 4-person WG",
     price: "€610 warm",
     features: ["Available from 01.08.", "Viewing Thursday", "Deposit after contract"],
+    cardFacts: [
+      { icon: "location", text: "Südstadt · 14 min by bike to campus" },
+      { icon: "home", text: "4-person shared flat" },
+      { icon: "calendar", text: "Viewing Thursday · 17:00–19:00" },
+      { icon: "payment", text: "Deposit after written contract" },
+    ],
     description: "Room in shared flat available from 01.08.\nViewing Thursday 17:00–19:00.\n\nPlease reply through the verified listing route.\nNo documents needed before viewing.\nDeposit only after viewing and written contract.",
     details: {
       "Price": "€610 warm",
-      "Location": "Südstadt, 14 min bike to campus",
+      "Location": "Südstadt, 14 min by bike to campus",
       "Availability": "From 01.08.",
       "Contact": "Jonas K.",
       "Platform profile": "Active since 2021",
@@ -347,7 +371,7 @@ export const ads: Ad[] = [
     hotspots: [
       {
         id: "h1",
-        label: "Verified listing route",
+        label: "housing-board.example/listing/wg-room-suedstadt-610",
         feedback: "The route stays on the housing platform, where the listing and conversation remain visible. That gives you somewhere to go back to if a question comes up.",
         mandatory: true,
         tactic: "Verified route",
@@ -357,7 +381,7 @@ export const ads: Ad[] = [
       },
       {
         id: "h2",
-        label: "Deposit after contract",
+        label: "Deposit: after contract",
         feedback: "The deposit comes after the viewing and written contract. You get to see what you are agreeing to before money changes hands.",
         mandatory: true,
         tactic: "Safe payment timing",
@@ -367,7 +391,7 @@ export const ads: Ad[] = [
       },
       {
         id: "h3",
-        label: "No documents before viewing",
+        label: "Documents: not required before viewing",
         feedback: "There is no request for documents before the viewing. The process lets you meet the situation first and handle paperwork when it is actually needed.",
         mandatory: true,
         tactic: "Verified route",
@@ -377,7 +401,7 @@ export const ads: Ad[] = [
       },
       {
         id: "h4",
-        label: "Profile active since 2021",
+        label: "Profile: active since 2021",
         feedback: "An account active since 2021 is useful context, but age alone cannot tell you who is behind the listing or whether this offer is right for you.",
         mandatory: false,
         tactic: "Not enough evidence",
@@ -420,10 +444,10 @@ export const ads: Ad[] = [
     inspectInstruction: "Follow the page from top to bottom. Look for the details that make the process verifiable, not just polished.",
     evidenceVerdict: "This offer is not safe because it looks tidy. It is safer because the route, timing, and requests leave room for you to verify before committing.",
     evidenceList: [
-      { cue: "Route", evidence: "housing-board.example/listing/...", interpretation: "The conversation stays on a route with an accountable platform trail" },
-      { cue: "Payment timing", evidence: "Deposit after contract", interpretation: "You can view and agree to the terms before paying" },
-      { cue: "Data request", evidence: "No documents before viewing", interpretation: "Nothing sensitive is collected before it is needed" },
-      { cue: "Urgency", evidence: "Viewing Thursday", interpretation: "There is time to verify instead of pressure to act immediately" }
+      { label: "Route", evidence: "housing-board.example/listing/...", interpretation: "The conversation stays on a route with an accountable platform trail" },
+      { label: "Payment timing", evidence: "Deposit after contract", interpretation: "You can view and agree to the terms before paying" },
+      { label: "Data request", evidence: "No documents before viewing", interpretation: "Nothing sensitive is collected before it is needed" },
+      { label: "Urgency", evidence: "Viewing Thursday", interpretation: "There is time to verify instead of pressure to act immediately" }
     ],
     relevantChecklistKeys: ["destination", "channel", "data", "payment", "pressure"],
     checklistExamples: {
@@ -441,6 +465,7 @@ export interface ChecklistItem {
   title: string;
   copy: string;
   detail: string;
+  takeaway: string;
 }
 
 export const checklist: ChecklistItem[] = [
@@ -449,29 +474,34 @@ export const checklist: ChecklistItem[] = [
     title: "Destination",
     copy: "Before you trust the promise, where does the link actually take you?",
     detail: "Read the domain in the URL bar before you follow the next step. Look-alike names and ‘secure-…’ redirects can make an outside page feel official.",
+    takeaway: "Check the domain.",
   },
   {
     key: "channel",
     title: "Channel",
     copy: "Are they asking you to leave the place where the conversation started?",
     detail: "A move to WhatsApp, Telegram, or a private form can remove the platform’s record and support. Keep the conversation where there is an accountable trail.",
+    takeaway: "Stay where the conversation started.",
   },
   {
     key: "data",
     title: "Data",
     copy: "What are they asking you to share before you have seen the room?",
     detail: "Passports, IBANs, and student IDs belong to a genuine contract step, not a casual viewing request. The timing tells you whether the request makes sense.",
+    takeaway: "No ID, passport, or IBAN before a viewing.",
   },
   {
     key: "payment",
     title: "Payment",
     copy: "When do they expect your money, and what happens before then?",
     detail: "A fee is not automatically a scam, but paying before a viewing or written contract puts you at a disadvantage. Check the terms in writing and keep payment last.",
+    takeaway: "View and sign before you pay.",
   },
   {
     key: "pressure",
     title: "Pressure",
     copy: "Is the offer giving you time to think, or trying to make you panic?",
     detail: "Real urgency can coexist with verification. If one careful question makes the offer disappear, the pressure is part of the tactic.",
+    takeaway: "Slow down when they rush you.",
   },
 ];

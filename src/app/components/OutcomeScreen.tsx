@@ -1,14 +1,19 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, Navigate, useParams } from "react-router";
-import { ads, checklist, type ChecklistKey } from "../data";
+import { ads } from "../data";
 import { useAdInspection } from "../state/InspectionContext";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
-import { CheckCircle, XCircle, ChevronDown, ChevronRight } from "lucide-react";
+import { AlertTriangle, CheckCircle, ChevronRight, XCircle } from "lucide-react";
 
 export function OutcomeScreen() {
   const { adId } = useParams();
   const ad = ads.find((item) => item.id === adId);
   const inspection = useAdInspection(adId ?? "");
+
+  useEffect(() => {
+    if (ad && inspection.state.verdict) {
+      inspection.complete();
+    }
+  }, [ad, inspection.complete, inspection.state.verdict]);
 
   if (!ad || !inspection.state.verdict) return <Navigate to="/board" replace />;
 
@@ -23,30 +28,50 @@ export function OutcomeScreen() {
   const enoughEvidence = mandatoryChecked >= threshold;
   const correctVerdict =
     (inspection.state.verdict === "scam") === (ad.type === "Scam");
+  const inspectedCount = inspection.state.tapped.size;
+  const misclassified = ad.hotspots.filter(
+    (hotspot) => inspection.state.correct[hotspot.id] === false
+  );
+  const missedImportant = mandatory.filter(
+    (hotspot) => inspection.state.classifications[hotspot.id] === undefined
+  );
 
   const headline = correctVerdict
     ? enoughEvidence
       ? "You made the call — and you can show why"
       : "Your instinct was right; now build the habit"
     : enoughEvidence
-    ? "You found the clues, but the final call slipped"
+    ? "You found the important details, but the final call slipped"
     : "The page moved faster than your evidence";
-  const body = correctVerdict
-    ? enoughEvidence
-      ? "You matched the offer and checked the cues that mattered. In real life, being able to explain a decision matters more than getting lucky."
-      : "Your decision was right, but it was not backed by enough checks. Good judgment is a repeatable habit, not a lucky guess."
-    : enoughEvidence
-    ? "You did the detective work, but the verdict went the other way. That is useful practice: a strong process still needs a final pause before you commit."
-    : "You did not have enough evidence to support the final call. When a page is moving quickly, slow the moment down and check the destination, data, payment, and pressure.";
-  const tone = correctVerdict && enoughEvidence ? "success" : correctVerdict ? "warning" : "error";
 
-  const orderedKeys = [
-    ...ad.relevantChecklistKeys,
-    ...checklist.map((item) => item.key).filter((key) => !ad.relevantChecklistKeys.includes(key)),
-  ] as ChecklistKey[];
-  const orderedChecklist = orderedKeys
-    .map((key) => checklist.find((item) => item.key === key))
-    .filter((item): item is (typeof checklist)[number] => Boolean(item));
+  const body = inspectedCount === 0
+    ? "You made the call without reviewing any highlighted details. Pause on the route, the requests, and the timing before you decide."
+    : correctVerdict
+    ? enoughEvidence
+      ? "Your decision matched the listing, and your checks gave it a clear basis."
+      : "Your decision was right, but it was not backed by enough important checks. Good judgment is a repeatable habit, not a lucky guess."
+    : enoughEvidence
+    ? "You did the important checks, but the verdict went the other way. Use the evidence to pause once more before you commit."
+    : "You did not have enough evidence to support the final call. Slow down and check the destination, data, payment, and pressure.";
+
+  const tone = correctVerdict && enoughEvidence ? "success" : correctVerdict ? "warning" : "error";
+  const reviewItems = [
+    ...misclassified.map((hotspot) => ({
+      id: `wrong-${hotspot.id}`,
+      label: hotspot.label,
+      answer: hotspot.tactic,
+      copy: hotspot.incorrectFeedback,
+    })),
+    ...missedImportant.map((hotspot) => ({
+      id: `missed-${hotspot.id}`,
+      label: hotspot.label,
+      answer: hotspot.tactic,
+      copy: hotspot.feedback,
+    })),
+  ];
+
+  const nextPath = inspection.sessionComplete ? "/takeaway" : "/board";
+  const nextLabel = inspection.sessionComplete ? "See final takeaway" : "Check another listing";
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] text-zinc-900 p-6 pb-12">
@@ -54,8 +79,10 @@ export function OutcomeScreen() {
         <div className="text-center mb-8 flex flex-col items-center">
           {tone === "success" ? (
             <CheckCircle className="w-16 h-16 text-green-600 mb-4" />
+          ) : tone === "warning" ? (
+            <AlertTriangle className="w-16 h-16 text-yellow-600 mb-4" />
           ) : (
-            <XCircle className={`w-16 h-16 mb-4 ${tone === "warning" ? "text-yellow-600" : "text-red-600"}`} />
+            <XCircle className="w-16 h-16 text-red-600 mb-4" />
           )}
           <h1
             className={`text-3xl font-bold mb-4 ${
@@ -64,83 +91,74 @@ export function OutcomeScreen() {
           >
             {headline}
           </h1>
-          <p className="text-zinc-600 text-lg">{body}</p>
+          <p className="text-zinc-600 text-lg max-w-2xl">{body}</p>
         </div>
 
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-zinc-200 mb-6">
-          <h2 className="font-bold text-zinc-900 mb-4">What your decision was built on</h2>
+          <h2 className="font-bold text-zinc-900 mb-4">Your decision</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
             <div className="rounded-xl bg-zinc-50 p-3">
               <div className="text-zinc-500 mb-1">Verdict</div>
-              <div className="font-semibold text-zinc-900">
+              <div className="font-bold text-zinc-900">
                 {inspection.state.verdict === "scam" ? "It’s a scam" : "It’s not a scam"}
               </div>
             </div>
             <div className="rounded-xl bg-zinc-50 p-3">
-              <div className="text-zinc-500 mb-1">Key cues checked</div>
-              <div className="font-semibold text-zinc-900">{mandatoryChecked} of {mandatory.length}</div>
-              <div className="text-xs text-zinc-500 mt-1">Supported call: {threshold} or more</div>
+              <div className="text-zinc-500 mb-1">Details inspected</div>
+              <div className="font-bold text-zinc-900">{inspectedCount}</div>
             </div>
             <div className="rounded-xl bg-zinc-50 p-3">
-              <div className="text-zinc-500 mb-1">Cues read accurately</div>
-              <div className="font-semibold text-zinc-900">{mandatoryCorrect} of {mandatory.length}</div>
-              <div className="text-xs text-zinc-500 mt-1">Extra clues add context</div>
+              <div className="text-zinc-500 mb-1">Important details read accurately</div>
+              <div className="font-bold text-zinc-900">{mandatoryCorrect} of {mandatory.length}</div>
             </div>
           </div>
         </div>
 
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-zinc-200 mb-6">
-          <h2 className="font-bold text-zinc-900 mb-1">Take this habit with you</h2>
-          <p className="text-sm text-zinc-600 mb-4">
-            A polished page can still lead somewhere unsafe, and a messy page can still be legitimate. Before you click, pay, or share documents, check the destination, channel, data, payment timing, and pressure.
-          </p>
-          <div className="space-y-3">
-            {orderedChecklist.map((item, index) => {
-              const isRelevant = ad.relevantChecklistKeys.includes(item.key);
-              return (
-                <Collapsible
-                  key={item.key}
-                  defaultOpen={isRelevant}
-                  className="bg-zinc-50 rounded-xl border border-zinc-200 group"
-                >
-                  <CollapsibleTrigger className="w-full p-4 flex items-start gap-3 text-left cursor-pointer">
-                    <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-zinc-600 font-bold shrink-0 border border-zinc-200 text-sm">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-bold text-zinc-900">{item.title}</h3>
-                        {isRelevant && (
-                          <span className="text-[10px] uppercase tracking-wide font-semibold text-yellow-800 bg-yellow-100 px-2 py-0.5 rounded-full">
-                            Matters in this case
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-zinc-600 text-sm leading-relaxed">{item.copy}</p>
-                    </div>
-                    <ChevronDown className="w-5 h-5 text-zinc-400 mt-1 shrink-0 transition-transform group-data-[state=open]:rotate-180" />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="px-4 pb-4 pl-14">
-                    <div className="border-t border-zinc-200 pt-3 space-y-3">
-                      <p className="text-sm text-zinc-700 leading-relaxed">{item.detail}</p>
-                      <div className="text-sm bg-yellow-50 border border-yellow-200 rounded-md p-3 text-yellow-900">
-                        <span className="font-semibold">{ad.title}:</span> {ad.checklistExamples[item.key]}
-                      </div>
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-              );
-            })}
-          </div>
+          <h2 className="font-bold text-zinc-900 mb-2">Why this listing mattered</h2>
+          <p className="text-zinc-700 leading-relaxed">{ad.evidenceVerdict}</p>
         </div>
 
+        {reviewItems.length > 0 ? (
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-zinc-200 mb-6">
+            <h2 className="font-bold text-zinc-900 mb-1">Review these details</h2>
+            <p className="text-sm text-zinc-600 mb-4">
+              Focus on the few details that would change your next action.
+            </p>
+            <div className="space-y-3">
+              {reviewItems.map((item) => (
+                <div key={item.id} className="rounded-xl bg-zinc-50 border border-zinc-200 p-4">
+                  <div className="font-bold text-zinc-900">{item.label}</div>
+                  <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-yellow-800">
+                    Read as: {item.answer}
+                  </div>
+                  <p className="mt-2 text-sm text-zinc-700 leading-relaxed">{item.copy}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : inspectedCount > 0 ? (
+          <div className="bg-green-50 rounded-2xl p-5 border border-green-200 mb-6">
+            <h2 className="font-bold text-green-900 mb-1">You interpreted the details correctly</h2>
+            <p className="text-sm text-green-800 leading-relaxed">
+              You focused on the important signals without overreacting to ordinary listing details.
+            </p>
+          </div>
+        ) : (
+          <div className="bg-yellow-50 rounded-2xl p-5 border border-yellow-200 mb-6">
+            <h2 className="font-bold text-yellow-900 mb-1">Next time, inspect before deciding</h2>
+            <p className="text-sm text-yellow-900 leading-relaxed">
+              A quick first impression is only a starting point. Check the highlighted details before you click, pay, or share documents.
+            </p>
+          </div>
+        )}
+
         <Link
-          to="/board"
+          to={nextPath}
           replace
-          onClick={inspection.resetAll}
-          className="w-full bg-[#E3B740] hover:bg-[#d6a935] text-zinc-900 py-4 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm"
+          className="w-full bg-[#E3B740] hover:bg-[#d6a935] text-zinc-900 py-4 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
         >
-          Try another listing <ChevronRight className="w-5 h-5" />
+          {nextLabel} <ChevronRight className="w-5 h-5" />
         </Link>
       </div>
     </div>

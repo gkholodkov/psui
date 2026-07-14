@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useParams, Link, Navigate, useNavigate } from "react-router";
 import { ads } from "../data";
-import { ExternalLink, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Search, ShieldCheck, ShieldAlert } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { useAdInspection, type Verdict } from "../state/InspectionContext";
 
@@ -12,7 +12,7 @@ export function AdDetail() {
   const inspection = useAdInspection(adId ?? "");
 
   useEffect(() => {
-    if (adId) {
+    if (adId && !inspection.isCompleted) {
       inspection.reset();
       inspection.setActive();
     }
@@ -20,7 +20,7 @@ export function AdDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adId]);
 
-  if (!ad) return <Navigate to="/board" replace />;
+  if (!ad || inspection.isCompleted) return <Navigate to="/board" replace />;
 
   const handleDecision = (verdict: Verdict) => {
     inspection.decide(verdict);
@@ -53,7 +53,7 @@ export function AdDetail() {
                 {Object.entries(ad.details).map(([key, value]) => (
                   <div key={key} className="flex flex-col sm:flex-row sm:gap-4">
                     <dt className="text-zinc-500 sm:w-1/3 text-sm">{key}</dt>
-                    <dd className={`text-zinc-900 font-medium text-sm sm:w-2/3 break-all ${key === "Link preview" ? "text-blue-600" : ""}`}>
+                    <dd className={`text-zinc-900 font-semibold text-sm sm:w-2/3 break-all ${key === "Link preview" ? "text-blue-600" : ""}`}>
                       {value}
                     </dd>
                   </div>
@@ -64,37 +64,33 @@ export function AdDetail() {
         </div>
 
         <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg border border-zinc-200 p-6 text-center">
-          <div className="text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-2">
-            Your next move
-          </div>
-          <p className="text-sm text-zinc-600 mb-5">
-            Use your first impression as a starting point, then inspect the application before you commit.
-          </p>
           <div className="flex flex-col gap-3">
             <Link
               to={`/ad/${ad.id}/form`}
               replace
-              className="w-full bg-[#E3B740] hover:bg-[#d6a935] text-zinc-900 py-4 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors"
+              className="w-full min-h-16 bg-[#E3B740] hover:bg-[#d6a935] text-zinc-900 py-5 px-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors shadow-sm"
             >
-              <ExternalLink className="w-5 h-5" />
+              <Search className="w-6 h-6" />
               Inspect the application
             </Link>
-            <button
-              type="button"
-              onClick={() => handleDecision("scam")}
-              className="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors"
-            >
-              <ShieldAlert className="w-5 h-5" />
-              It’s a scam
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDecision("not-scam")}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors"
-            >
-              <ShieldCheck className="w-5 h-5" />
-              It’s not a scam
-            </button>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleDecision("scam")}
+                className="min-h-10 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
+              >
+                <ShieldAlert className="w-4 h-4" />
+                It’s a scam
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDecision("not-scam")}
+                className="min-h-10 bg-green-600 hover:bg-green-700 text-white py-2 px-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                It’s not a scam
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -37,7 +37,7 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
   const chosen = state.classifications[hotspotId];
   const isCorrect = state.correct[hotspotId];
   const isTapped = state.tapped.has(hotspotId);
-  const cueNumber = (ad?.inspectionOrder.indexOf(hotspotId) ?? -1) + 1;
+  const detailNumber = (ad?.inspectionOrder.indexOf(hotspotId) ?? -1) + 1;
 
   const getInspectablePosition = (): InspectablePosition | null => {
     const rect = triggerRef.current?.getBoundingClientRect();
@@ -103,12 +103,12 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
         >
           <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
             <div className="min-w-0">{children}</div>
-            {!open && cueNumber > 0 && (
+            {!open && detailNumber > 0 && (
               <span className="pointer-events-none inline-flex shrink-0 items-center justify-self-end gap-2 whitespace-nowrap rounded-full border-2 border-[#b8912e] bg-zinc-900 px-2 py-1.5 text-xs font-bold leading-none text-white shadow-xl">
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#E3B740] text-sm font-bold text-zinc-900">
-                  {cueNumber}
+                  {detailNumber}
                 </span>
-                <span>Click me</span>
+                <span>Inspect</span>
               </span>
             )}
           </div>
@@ -118,17 +118,14 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
       <PopoverContent
         sideOffset={10}
         collisionPadding={{ top: 96, bottom: 144, left: 16, right: 16 }}
-        className="z-[110] w-[min(22rem,calc(100vw-2rem))] p-0 overflow-hidden border-zinc-200 bg-white shadow-2xl"
+        className="z-[110] w-[min(34rem,calc(100vw-2rem))] p-0 overflow-hidden border-zinc-200 bg-white shadow-2xl"
       >
-        <div className="p-4 border-b border-zinc-200">
-          <div className="text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-1">
-            {hotspot.label}
-          </div>
-          <p className="text-sm text-zinc-700 leading-relaxed">{hotspot.feedback}</p>
+        <div className="p-6 border-b border-zinc-200">
+          <h2 className="text-xl font-bold text-zinc-900 break-all">{hotspot.label}</h2>
         </div>
-        <div className="p-4">
-          <div className="text-xs font-semibold text-zinc-700 mb-2">
-            What is this clue telling you?
+        <div className="p-6">
+          <div className="text-sm font-semibold text-zinc-700 mb-3">
+            What does this detail suggest?
           </div>
           <div className="flex flex-col gap-2">
             {options.map((opt) => {
@@ -141,7 +138,7 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
                   type="button"
                   onClick={() => classify(hotspotId, opt)}
                   disabled={chosen !== undefined && !picked}
-                  className={`text-left text-sm px-3 py-2 rounded-md border transition-colors ${
+                  className={`text-left text-sm min-h-12 px-4 py-3 rounded-lg border transition-colors ${
                     showResult && picked && isAnswer
                       ? "bg-green-50 border-green-300 text-green-800"
                       : showResult && picked && !isAnswer
@@ -176,11 +173,11 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
               <button
                 type="button"
                 onClick={handleNext}
-                className="mt-3 w-full bg-[#E3B740] hover:bg-[#d6a935] text-zinc-900 px-3 py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2"
+                className="mt-4 w-full bg-[#E3B740] hover:bg-[#d6a935] text-zinc-900 px-4 py-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2"
               >
                 {state.activeHotspotId === ad?.inspectionOrder[ad.inspectionOrder.length - 1]
                   ? "Finish this check"
-                  : "Show me the next clue"}
+                  : "Show the next detail"}
                 <ChevronRight className="w-4 h-4" />
               </button>
             </>

@@ -38,7 +38,7 @@ export function InspectOverlay({ adId, onDecide }: InspectOverlayProps) {
             <div className="text-xs text-zinc-600 leading-snug">
               {state.activeHotspotId
                 ? ad.inspectInstruction
-                : "You’ve walked through every clue. Now make the call that fits the evidence."}
+                : "You’ve reviewed the highlighted details. Now make the call that fits the evidence."}
             </div>
           </div>
         </div>
@@ -48,11 +48,11 @@ export function InspectOverlay({ adId, onDecide }: InspectOverlayProps) {
         <div className="w-full max-w-3xl mx-auto bg-white rounded-2xl border border-zinc-200 shadow-sm p-4 md:p-5 flex flex-col items-start gap-4">
           <div className="grid grid-cols-2 gap-3 text-xs text-zinc-600">
             <div>
-              <div className="font-semibold text-zinc-900">Clues checked</div>
+              <div className="font-semibold text-zinc-900">Details checked</div>
               <div>{checkedCount} of {ad.hotspots.length}</div>
             </div>
             <div>
-              <div className="font-semibold text-zinc-900">Key clues</div>
+              <div className="font-semibold text-zinc-900">Important details</div>
               <div>{mandatoryChecked} checked · {mandatoryCorrect} read accurately</div>
             </div>
           </div>

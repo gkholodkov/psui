@@ -40,7 +40,7 @@ export function FormScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adId]);
 
-  if (!ad) return <Navigate to="/board" replace />;
+  if (!ad || inspection.isCompleted) return <Navigate to="/board" replace />;
 
   const hotspotMap = FORM_HOTSPOT_BY_AD[ad.id] ?? {};
   const mappedHotspotIds = new Set(Object.values(hotspotMap));
@@ -61,7 +61,7 @@ export function FormScreen() {
   const renderField = (label: string, demoValue: string, hotspotId?: string) => {
     const content = (
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-zinc-700">{label}</label>
+        <label className="text-sm font-semibold text-zinc-800">{label}</label>
         <input
           readOnly
           aria-label={label}
@@ -157,7 +157,7 @@ export function FormScreen() {
           {remainingHotspots.length > 0 && (
             <div className="p-6 border-b border-zinc-200">
               <div className="text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-3">
-                Details worth a closer look
+                Details to review
               </div>
               <div className="space-y-2">
                 {remainingHotspots.map((hotspot) => (
@@ -170,7 +170,6 @@ export function FormScreen() {
                   >
                     <div className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-3">
                       <span className="text-sm font-medium text-zinc-800">{hotspot.label}</span>
-                      <span className="text-xs text-zinc-500">Clue</span>
                     </div>
                   </Inspectable>
                 ))}
