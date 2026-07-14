@@ -26,18 +26,18 @@ export function OutcomeScreen() {
 
   const headline = correctVerdict
     ? enoughEvidence
-      ? "Good call, backed by evidence"
-      : "Correct instinct, but inspect more next time"
+      ? "You made the call — and you can show why"
+      : "Your instinct was right; now build the habit"
     : enoughEvidence
-    ? "You found cues, but the verdict was wrong"
-    : "This choice needed more evidence";
+    ? "You found the clues, but the final call slipped"
+    : "The page moved faster than your evidence";
   const body = correctVerdict
     ? enoughEvidence
-      ? "Your decision matched the offer and you checked enough of its important cues."
-      : "Your decision matched the offer, but the evidence check was incomplete."
+      ? "You matched the offer and checked the cues that mattered. In real life, being able to explain a decision matters more than getting lucky."
+      : "Your decision was right, but it was not backed by enough checks. Good judgment is a repeatable habit, not a lucky guess."
     : enoughEvidence
-    ? "You inspected enough mandatory cues to make an informed decision, but the final verdict did not match this offer."
-    : "The final verdict did not match this offer, and too few mandatory cues were checked to support it.";
+    ? "You did the detective work, but the verdict went the other way. That is useful practice: a strong process still needs a final pause before you commit."
+    : "You did not have enough evidence to support the final call. When a page is moving quickly, slow the moment down and check the destination, data, payment, and pressure.";
   const tone = correctVerdict && enoughEvidence ? "success" : correctVerdict ? "warning" : "error";
 
   const orderedKeys = [
@@ -68,7 +68,7 @@ export function OutcomeScreen() {
         </div>
 
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-zinc-200 mb-6">
-          <h2 className="font-bold text-zinc-900 mb-4">Your session</h2>
+          <h2 className="font-bold text-zinc-900 mb-4">What your decision was built on</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
             <div className="rounded-xl bg-zinc-50 p-3">
               <div className="text-zinc-500 mb-1">Verdict</div>
@@ -77,22 +77,22 @@ export function OutcomeScreen() {
               </div>
             </div>
             <div className="rounded-xl bg-zinc-50 p-3">
-              <div className="text-zinc-500 mb-1">Mandatory cues checked</div>
+              <div className="text-zinc-500 mb-1">Key cues checked</div>
               <div className="font-semibold text-zinc-900">{mandatoryChecked} of {mandatory.length}</div>
-              <div className="text-xs text-zinc-500 mt-1">Threshold: {threshold}</div>
+              <div className="text-xs text-zinc-500 mt-1">Supported call: {threshold} or more</div>
             </div>
             <div className="rounded-xl bg-zinc-50 p-3">
-              <div className="text-zinc-500 mb-1">Classified correctly</div>
+              <div className="text-zinc-500 mb-1">Cues read accurately</div>
               <div className="font-semibold text-zinc-900">{mandatoryCorrect} of {mandatory.length}</div>
-              <div className="text-xs text-zinc-500 mt-1">Optional cues do not affect points</div>
+              <div className="text-xs text-zinc-500 mt-1">Extra clues add context</div>
             </div>
           </div>
         </div>
 
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-zinc-200 mb-6">
-          <h2 className="font-bold text-zinc-900 mb-1">Before you apply, check these things</h2>
+          <h2 className="font-bold text-zinc-900 mb-1">Take this habit with you</h2>
           <p className="text-sm text-zinc-600 mb-4">
-            The important question is not whether an offer looks polished. Check its destination, channel, data requests, payment timing, and pressure.
+            A polished page can still lead somewhere unsafe, and a messy page can still be legitimate. Before you click, pay, or share documents, check the destination, channel, data, payment timing, and pressure.
           </p>
           <div className="space-y-3">
             {orderedChecklist.map((item, index) => {
@@ -112,7 +112,7 @@ export function OutcomeScreen() {
                         <h3 className="font-bold text-zinc-900">{item.title}</h3>
                         {isRelevant && (
                           <span className="text-[10px] uppercase tracking-wide font-semibold text-yellow-800 bg-yellow-100 px-2 py-0.5 rounded-full">
-                            Relevant here
+                            Matters in this case
                           </span>
                         )}
                       </div>
@@ -140,7 +140,7 @@ export function OutcomeScreen() {
           onClick={inspection.resetAll}
           className="w-full bg-[#E3B740] hover:bg-[#d6a935] text-zinc-900 py-4 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm"
         >
-          Check another offer <ChevronRight className="w-5 h-5" />
+          Try another listing <ChevronRight className="w-5 h-5" />
         </Link>
       </div>
     </div>

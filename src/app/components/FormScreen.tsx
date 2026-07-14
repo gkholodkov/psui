@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, Navigate } from "react-router";
 import { ads } from "../data";
 import { Lock } from "lucide-react";
@@ -29,8 +29,10 @@ export function FormScreen() {
   const ad = ads.find((item) => item.id === adId);
   const inspection = useAdInspection(adId ?? "");
   const [filledFields, setFilledFields] = useState<Record<string, boolean>>({});
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    scrollContainerRef.current?.scrollTo(0, 0);
     if (adId) {
       inspection.setActive();
       inspection.startInspection();
@@ -43,8 +45,9 @@ export function FormScreen() {
   const hotspotMap = FORM_HOTSPOT_BY_AD[ad.id] ?? {};
   const mappedHotspotIds = new Set(Object.values(hotspotMap));
   const urlHotspotId = ad.id === "A" ? "h2" : ad.id === "C" ? "h1" : null;
+  const badgeHotspotId = ad.id === "B" && ad.formBadge ? "h1" : null;
   if (urlHotspotId) mappedHotspotIds.add(urlHotspotId);
-  if (ad.id === "B") mappedHotspotIds.add("h1");
+  if (badgeHotspotId) mappedHotspotIds.add(badgeHotspotId);
 
   const remainingHotspots = ad.hotspots.filter((hotspot) => !mappedHotspotIds.has(hotspot.id));
 
@@ -63,9 +66,16 @@ export function FormScreen() {
           readOnly
           aria-label={label}
           value={filledFields[label] ? demoValue : ""}
-          placeholder="Click to fill demo value"
-          onClick={() => setFilledFields((current) => ({ ...current, [label]: true }))}
-          className="h-10 bg-white border border-zinc-300 rounded-md w-full px-3 text-sm text-zinc-800 placeholder:text-zinc-400 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E3B740]"
+          placeholder="Select to preview a demo value"
+          onClick={() => {
+            if (!hotspotId || !active(hotspotId)) {
+              setFilledFields((current) => ({ ...current, [label]: true }));
+            }
+          }}
+          tabIndex={hotspotId && active(hotspotId) ? -1 : undefined}
+          className={`h-10 bg-white border border-zinc-300 rounded-md w-full px-3 text-sm text-zinc-800 placeholder:text-zinc-400 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E3B740] ${
+            hotspotId && active(hotspotId) ? "pointer-events-none" : ""
+          }`}
         />
       </div>
     );
@@ -85,8 +95,11 @@ export function FormScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] flex flex-col text-zinc-900 pt-20 pb-56">
-      <div className="fixed top-0 left-0 right-0 z-10 bg-zinc-100 border-b border-zinc-300 shadow-sm flex flex-col">
+    <div
+      ref={scrollContainerRef}
+      className="h-[100dvh] overflow-y-auto overscroll-none bg-[#F5F5F5] flex flex-col text-zinc-900 pt-44"
+    >
+      <div className="fixed top-20 left-0 right-0 z-10 bg-zinc-100 border-b border-zinc-300 shadow-sm flex flex-col">
         <div className="h-10 bg-zinc-200 flex items-center px-4 gap-2 border-b border-zinc-300">
           <div className="flex gap-1.5">
             <div className="w-3 h-3 rounded-full bg-zinc-400" />
@@ -121,16 +134,22 @@ export function FormScreen() {
           <div className="p-6 border-b border-zinc-200">
             <h1 className="text-2xl font-bold text-zinc-900 mb-2">{ad.formTitle}</h1>
             {ad.formBadge && (
-              <Inspectable
-                adId={ad.id}
-                hotspotId="h1"
-                active={active("h1")}
-                className={active("h1") ? "inline-block mb-4 px-1" : "inline-block mb-4"}
-              >
-                <span className="inline-block bg-yellow-50 text-yellow-700 border border-yellow-200 text-xs font-semibold px-2 py-1 rounded">
+              badgeHotspotId ? (
+                <Inspectable
+                  adId={ad.id}
+                  hotspotId={badgeHotspotId}
+                  active={active(badgeHotspotId)}
+                  className={active(badgeHotspotId) ? "inline-block mb-4 px-1" : "inline-block mb-4"}
+                >
+                  <span className="inline-block bg-yellow-50 text-yellow-700 border border-yellow-200 text-xs font-semibold px-2 py-1 rounded">
+                    {ad.formBadge}
+                  </span>
+                </Inspectable>
+              ) : (
+                <span className="inline-block mb-4 bg-yellow-50 text-yellow-700 border border-yellow-200 text-xs font-semibold px-2 py-1 rounded">
                   {ad.formBadge}
                 </span>
-              </Inspectable>
+              )
             )}
             <p className="text-zinc-600 text-sm leading-relaxed">{ad.formBody}</p>
           </div>
@@ -138,7 +157,7 @@ export function FormScreen() {
           {remainingHotspots.length > 0 && (
             <div className="p-6 border-b border-zinc-200">
               <div className="text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-3">
-                Offer details to inspect
+                Details worth a closer look
               </div>
               <div className="space-y-2">
                 {remainingHotspots.map((hotspot) => (
@@ -151,7 +170,7 @@ export function FormScreen() {
                   >
                     <div className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-3">
                       <span className="text-sm font-medium text-zinc-800">{hotspot.label}</span>
-                      <span className="text-xs text-zinc-500">Cue</span>
+                      <span className="text-xs text-zinc-500">Clue</span>
                     </div>
                   </Inspectable>
                 ))}
@@ -161,7 +180,7 @@ export function FormScreen() {
 
           <div className="p-6 bg-zinc-50">
             <div className="text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-3">
-              Application fields
+              What the form asks for
             </div>
             <div className="space-y-4">
               {ad.formFields.map((field) => renderField(field.label, field.demoValue, hotspotMap[field.label]))}

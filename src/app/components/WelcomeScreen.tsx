@@ -13,7 +13,7 @@ export function WelcomeScreen() {
         </h1>
         
         <p className="text-2xl text-zinc-800 mb-10 font-medium max-w-xl">
-          Pick a room, make your first call, then inspect the application before you click, pay, or share documents.
+          Pick a room, trust your first impression, then inspect the application before you click, pay, or share documents.
         </p>
         
         <div className="flex flex-col gap-5 w-full z-10 mb-8 relative">

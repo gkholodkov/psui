@@ -122,7 +122,7 @@ export function InspectionProvider({ children }: { children: React.ReactNode }) 
     setByAd((prev) => {
       const cur = ensure(adId, prev);
       const ad = ads.find((item) => item.id === adId);
-      const firstHotspotId = ad?.hotspots[0]?.id ?? null;
+      const firstHotspotId = ad?.inspectionOrder[0] ?? null;
       return {
         ...prev,
         [adId]: {
@@ -137,13 +137,14 @@ export function InspectionProvider({ children }: { children: React.ReactNode }) 
     setByAd((prev) => {
       const cur = ensure(adId, prev);
       const ad = ads.find((item) => item.id === adId);
-      const currentIndex = ad?.hotspots.findIndex((h) => h.id === cur.activeHotspotId) ?? -1;
-      const nextHotspot = ad?.hotspots[currentIndex + 1];
+      const order = ad?.inspectionOrder ?? [];
+      const currentIndex = order.findIndex((hotspotId) => hotspotId === cur.activeHotspotId);
+      const nextHotspotId = order[currentIndex + 1];
       return {
         ...prev,
         [adId]: {
           ...cur,
-          activeHotspotId: nextHotspot?.id ?? null,
+          activeHotspotId: nextHotspotId ?? null,
           selectedInspectable: null,
         },
       };

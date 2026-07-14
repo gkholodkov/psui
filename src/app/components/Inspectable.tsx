@@ -116,7 +116,7 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
         </div>
         <div className="p-4">
           <div className="text-xs font-semibold text-zinc-700 mb-2">
-            What kind of evidence is this?
+            What is this clue telling you?
           </div>
           <div className="flex flex-col gap-2">
             {options.map((opt) => {
@@ -166,9 +166,9 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
                 onClick={handleNext}
                 className="mt-3 w-full bg-[#E3B740] hover:bg-[#d6a935] text-zinc-900 px-3 py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2"
               >
-                {state.activeHotspotId === ad?.hotspots[ad.hotspots.length - 1]?.id
-                  ? "Finish inspection"
-                  : "Next cue"}
+                {state.activeHotspotId === ad?.inspectionOrder[ad.inspectionOrder.length - 1]
+                  ? "Finish this check"
+                  : "Show me the next clue"}
                 <ChevronRight className="w-4 h-4" />
               </button>
             </>

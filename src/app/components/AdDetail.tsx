@@ -65,10 +65,10 @@ export function AdDetail() {
 
         <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg border border-zinc-200 p-6 text-center">
           <div className="text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-2">
-            Decide what to do next
+            Your next move
           </div>
           <p className="text-sm text-zinc-600 mb-5">
-            Trust your first impression, or inspect the application before deciding.
+            Use your first impression as a starting point, then inspect the application before you commit.
           </p>
           <div className="flex flex-col gap-3">
             <Link
@@ -77,7 +77,7 @@ export function AdDetail() {
               className="w-full bg-[#E3B740] hover:bg-[#d6a935] text-zinc-900 py-4 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors"
             >
               <ExternalLink className="w-5 h-5" />
-              Go to form to inspect
+              Inspect the application
             </Link>
             <button
               type="button"

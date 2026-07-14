@@ -10,9 +10,9 @@ export function Board() {
     <div className="min-h-screen bg-[#F5F5F5] pb-20">
       <div className="bg-white text-zinc-900 p-6 shadow-sm text-center sticky top-0 z-10 border-b border-zinc-200">
         <h1 className="text-3xl md:text-4xl font-bold mb-2">Which room would you check first?</h1>
-        <p className="text-zinc-600">3 offers. 45 seconds. One could cost you more than rent.</p>
+        <p className="text-zinc-600">3 offers. 45 seconds. One may look perfect — and still cost you more than rent.</p>
         <p className="text-sm text-zinc-600 max-w-xl mx-auto mt-3">
-          Before you apply, check where the link goes, what data it asks for, when payment happens, and whether you are being rushed.
+          Before you apply, follow the trail: where does the link go, what does it ask you to share, when does payment happen, and is anyone rushing you?
         </p>
         <div className="flex items-center justify-center gap-3 text-[11px] text-zinc-500 mt-3">
           <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> No login</span>
@@ -22,7 +22,7 @@ export function Board() {
       </div>
       
       <div className="w-full p-6 mt-6">
-        <MangoBubble text="Pick any ad. I'll only explain after you decide." />
+          <MangoBubble text="Choose a listing. I’ll let you make the first call, then we’ll unpack the clues together." />
         
         <div className="grid grid-cols-1 gap-6 mt-8">
           {ads.map((ad) => (
