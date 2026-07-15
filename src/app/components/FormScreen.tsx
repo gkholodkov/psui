@@ -160,12 +160,10 @@ export function FormScreen() {
                 Details to review
               </div>
               <div className="space-y-2">
-                {ad.type === "Scam" && (
-                  <div className="flex flex-col gap-1 rounded-lg border border-zinc-200 bg-white px-3 py-3">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Original URL</span>
-                    <span className="text-sm font-mono text-zinc-700 break-all">{ad.originalUrl}</span>
-                  </div>
-                )}
+                <div className="flex flex-col gap-1 rounded-lg border border-zinc-200 bg-white px-3 py-3">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Original URL</span>
+                  <span className="text-sm font-mono text-zinc-700 break-all">{ad.originalUrl}</span>
+                </div>
                 {remainingHotspots.map((hotspot) => (
                   <Inspectable
                     key={hotspot.id}

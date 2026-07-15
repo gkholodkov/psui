@@ -10,9 +10,7 @@ export function WelcomeScreen() {
           A housing-scam reality check
         </p>
         <h1 className="w-full text-[3.5rem] md:text-[4.5rem] leading-[1.02] font-semibold text-zinc-900 mb-8 tracking-tight">
-          Would you spot the scam
-          <br />
-          before you <span className="text-[#E3B740]">pay?</span>
+          Would you spot the <span className="text-[#E3B740]">scam?</span>
         </h1>
 
         <p className="w-full text-2xl text-zinc-800 mb-10 font-medium">
