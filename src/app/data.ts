@@ -64,6 +64,7 @@ export interface Ad {
   details: Record<string, string>;
   cta: string;
   formTitle: string;
+  originalUrl: string;
   formUrl: string;
   formBadge?: string;
   formBody: string;
@@ -100,13 +101,12 @@ export const ads: Ad[] = [
       "Price": "€430 warm",
       "Location": "Near central campus",
       "Availability": "Immediately",
-      "Contact": "Anna M.",
-      "Platform note": "Reservation handled externally",
-      "Link preview": "secure-viewing.example/r/ka?listing=24891&src=board&utm=student"
+      "Contact": "Anna M."
     },
     cta: "Open offer",
     formTitle: "Student Viewing Reservation",
-    formUrl: "secure-viewing.example/r/ka?listing=24891&src=board&utm=student",
+    originalUrl: "www.immobilien-scout23.de/expose/studio-near-campus-24891",
+    formUrl: "www.imobilien-scout23.de/expose/studio-near-campus-24891",
     formBadge: "3 viewing slots left",
     formBody: "To prevent fake applications, please confirm your student status before selecting a viewing slot. You will be redirected to the landlord after verification.",
     formFields: [
@@ -118,22 +118,12 @@ export const ads: Ad[] = [
     ],
     hotspots: [
       {
-        id: "h1",
-        label: "Reservation handled externally",
-        feedback: "This ad quietly moves you off the housing board and onto a third-party domain. The moment you leave the platform, it becomes much harder to verify who is behind the request.",
-        mandatory: false,
-        tactic: "Brand impersonation",
-        correctFeedback: "That’s it. ‘secure-viewing.example’ sounds official, but it is not the housing board. A familiar-looking name can still be a disguise.",
-        incorrectFeedback: "The important detail is the destination. This page borrows the feel of a trusted booking route while sending you somewhere else.",
-        distractors: ["Verified route", "Safe payment timing"],
-      },
-      {
         id: "h2",
-        label: "secure-viewing.example/r/ka?listing=24891&src=board&utm=student",
-        feedback: "Look past the reassuring label: this domain is not the housing platform. The listing, src, and utm parameters are not automatically malicious, but they make the real destination worth checking.",
+        label: "www.imobilien-scout23.de/expose/studio-near-campus-24891",
+        feedback: "Compare this current address with the original URL shown below. The form uses a look-alike domain with one letter missing.",
         mandatory: true,
         tactic: "Brand impersonation",
-        correctFeedback: "You caught the disguise. The URL looks like a normal listing link, but it leads to a third-party destination — a classic impersonation signal.",
+        correctFeedback: "You caught the spelling change. The original listing uses ‘immobilien-scout23.de’; the current form uses ‘imobilien-scout23.de’.",
         incorrectFeedback: "That’s a reasonable concern, but this detail is about where the link leads, not about urgency or money. Read the domain before you follow the promise.",
         distractors: ["Scarcity pressure", "Advance payment"],
       },
@@ -188,11 +178,11 @@ export const ads: Ad[] = [
         distractors: ["Verified route", "Brand impersonation"],
       }
     ],
-    inspectionOrder: ["h2", "h1", "h5", "h6", "h7", "h3", "h4"],
+    inspectionOrder: ["h2", "h5", "h6", "h7", "h3", "h4"],
     inspectInstruction: "Start at the top and follow each highlighted detail. Check the destination before you trust the form.",
     evidenceVerdict: "This route looks polished, but it takes you away from the accountable platform and asks for sensitive information too early.",
     evidenceList: [
-      { label: "URL/domain", evidence: "secure-viewing.example/r/ka?...", interpretation: "The link leaves the verified platform and hides behind a convincing name" },
+      { label: "URL/domain", evidence: "www.imobilien-scout23.de/expose/...", interpretation: "The link uses a look-alike domain instead of the original housing platform" },
       { label: "Platform switch", evidence: "Continue to WhatsApp confirmation", interpretation: "The conversation leaves the platform’s record and protections" },
       { label: "Data request", evidence: "Upload student ID before viewing", interpretation: "A sensitive document is requested before the room is even shown" }
     ],
@@ -200,7 +190,7 @@ export const ads: Ad[] = [
     outcomeUnsafeBody: "If you continued, you would hand over a student ID and move the conversation somewhere the original platform could not help you.",
     relevantChecklistKeys: ["destination", "channel", "data", "pressure"],
     checklistExamples: {
-      destination: "‘secure-viewing.example’ sounded official, but it was a third-party destination.",
+      destination: "‘imobilien-scout23.de’ looked like the original platform, but one letter was missing from the domain.",
       channel: "The form tried to move the conversation to WhatsApp, away from the platform’s record.",
       data: "A student ID was requested before anyone had confirmed the viewing.",
       payment: "No payment was requested yet, but the data being collected could enable the next step of the fraud.",
@@ -227,12 +217,12 @@ export const ads: Ad[] = [
       "Location": "Südstadt",
       "Availability": "Next week",
       "Contact": "Lukas P.",
-      "Viewing": "After tenant pre-check",
-      "Link preview": "mieter-check.example/start?flat=WG1184&slot=2"
+      "Viewing": "After tenant pre-check"
     },
     cta: "Open offer",
     formTitle: "Tenant Pre-Check",
-    formUrl: "mieter-check.example/start?flat=WG1184&slot=2",
+    originalUrl: "www.immobilien-scout23.de/expose/wg-suedstadt-1184",
+    formUrl: "www.immobilien-scout23.de/secure-check/wg-suedstadt-1184?re=https%3A%2F%2Fimmobilien-check23.de%2Fstart%3Fflat%3DWG1184",
     formBadge: "2 slots left this week",
     formBody: "The landlord uses pre-checks to avoid fake applications and missed appointments. Complete the steps below to hold one viewing slot.",
     formFields: [
@@ -313,9 +303,19 @@ export const ads: Ad[] = [
         correctFeedback: "Exactly. A first name is a detail, not verification. The safer question is what the platform can confirm about the person and the process.",
         incorrectFeedback: "The name is not where the risk is concentrated. It may build trust, but the early data and payment requests deserve your attention.",
         distractors: ["Brand impersonation", "Platform switching"],
+      },
+      {
+        id: "h8",
+        label: "www.immobilien-scout23.de/secure-check/wg-suedstadt-1184?re=https%3A%2F%2Fimmobilien-check23.de%2Fstart%3Fflat%3DWG1184",
+        feedback: "Compare this current address with the original URL shown below. The form uses a secure-check path with a redirect parameter to another domain.",
+        mandatory: true,
+        tactic: "Brand impersonation",
+        correctFeedback: "Exactly. The original listing is on the normal expose page; the form moved to a secure-check path that redirects elsewhere.",
+        incorrectFeedback: "This detail is about comparing the original listing address with the current form address, not about the deposit or the time pressure.",
+        distractors: ["Scarcity pressure", "Advance payment"],
       }
     ],
-    inspectionOrder: ["h1", "h5", "h6", "h7", "h2", "h4", "h3"],
+    inspectionOrder: ["h8", "h1", "h5", "h6", "h7", "h2", "h4", "h3"],
     inspectInstruction: "Read the form from top to bottom. Notice what it asks you to share or pay before a viewing.",
     evidenceVerdict: "The friendly presentation hides a risky process: sensitive data and a deposit are requested before you have seen the room.",
     evidenceList: [
@@ -327,7 +327,7 @@ export const ads: Ad[] = [
     outcomeUnsafeBody: "If you submitted the form, you would share a passport or ID, an IBAN, and a holding deposit before seeing the room.",
     relevantChecklistKeys: ["destination", "channel", "data", "payment", "pressure"],
     checklistExamples: {
-      destination: "‘mieter-check.example’ looked like part of the process, but it was not the original housing board.",
+      destination: "The form stayed on a familiar-looking host, but its ‘re’ parameter pointed to a separate verification site.",
       channel: "The conversation began on the platform, then the form took over before the viewing.",
       data: "The form asked for a passport, IBAN, and address before you had seen the room.",
       payment: "A €250 holding deposit was requested before a viewing or written contract.",
@@ -355,12 +355,12 @@ export const ads: Ad[] = [
       "Location": "Südstadt, 14 min by bike to campus",
       "Availability": "From 01.08.",
       "Contact": "Jonas K.",
-      "Platform profile": "Active since 2021",
-      "Link preview": "housing-board.example/listing/wg-room-suedstadt-610"
+      "Platform profile": "Active since 2021"
     },
     cta: "Open offer",
     formTitle: "Verified listing route",
-    formUrl: "housing-board.example/listing/wg-room-suedstadt-610",
+    originalUrl: "www.immobilien-scout23.de/expose/wg-room-suedstadt-610",
+    formUrl: "www.immobilien-scout23.de/expose/wg-room-suedstadt-610",
     formBody: "Reply to request a viewing. The landlord should not ask for deposit or documents before the viewing.",
     formFields: [
       { label: "Viewing: Thursday 17:00–19:00", demoValue: "Viewing requested" },
@@ -371,7 +371,7 @@ export const ads: Ad[] = [
     hotspots: [
       {
         id: "h1",
-        label: "housing-board.example/listing/wg-room-suedstadt-610",
+        label: "www.immobilien-scout23.de/expose/wg-room-suedstadt-610",
         feedback: "The route stays on the housing platform, where the listing and conversation remain visible. That gives you somewhere to go back to if a question comes up.",
         mandatory: true,
         tactic: "Verified route",
@@ -444,14 +444,14 @@ export const ads: Ad[] = [
     inspectInstruction: "Follow the page from top to bottom. Look for the details that make the process verifiable, not just polished.",
     evidenceVerdict: "This offer is not safe because it looks tidy. It is safer because the route, timing, and requests leave room for you to verify before committing.",
     evidenceList: [
-      { label: "Route", evidence: "housing-board.example/listing/...", interpretation: "The conversation stays on a route with an accountable platform trail" },
+      { label: "Route", evidence: "www.immobilien-scout23.de/expose/...", interpretation: "The conversation stays on the original housing platform" },
       { label: "Payment timing", evidence: "Deposit after contract", interpretation: "You can view and agree to the terms before paying" },
       { label: "Data request", evidence: "No documents before viewing", interpretation: "Nothing sensitive is collected before it is needed" },
       { label: "Urgency", evidence: "Viewing Thursday", interpretation: "There is time to verify instead of pressure to act immediately" }
     ],
     relevantChecklistKeys: ["destination", "channel", "data", "payment", "pressure"],
     checklistExamples: {
-      destination: "The link stayed on ‘housing-board.example’, the same platform where the listing began.",
+      destination: "The link stayed on ‘immobilien-scout23.de’, the same platform where the listing began.",
       channel: "The conversation stayed on the platform; nobody asked you to disappear into WhatsApp.",
       data: "No documents were requested just to earn a viewing.",
       payment: "The deposit appeared only after the viewing and written contract.",

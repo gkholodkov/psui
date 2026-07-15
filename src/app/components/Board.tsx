@@ -86,7 +86,9 @@ export function Board() {
 
                   <span
                     className={`block w-full py-3 text-center rounded-xl font-semibold ${
-                      isCompleted ? "bg-zinc-200 text-zinc-500" : "bg-zinc-900 text-white"
+                      isCompleted
+                        ? "bg-zinc-200 text-zinc-500"
+                        : "bg-[#E3B740] hover:bg-[#d6a935] text-zinc-900"
                     }`}
                   >
                     {isCompleted ? "Listing checked" : "Open listing"}

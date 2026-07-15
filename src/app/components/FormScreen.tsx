@@ -44,7 +44,7 @@ export function FormScreen() {
 
   const hotspotMap = FORM_HOTSPOT_BY_AD[ad.id] ?? {};
   const mappedHotspotIds = new Set(Object.values(hotspotMap));
-  const urlHotspotId = ad.id === "A" ? "h2" : ad.id === "C" ? "h1" : null;
+  const urlHotspotId = ad.id === "A" ? "h2" : ad.id === "B" ? "h8" : "h1";
   const badgeHotspotId = ad.id === "B" && ad.formBadge ? "h1" : null;
   if (urlHotspotId) mappedHotspotIds.add(urlHotspotId);
   if (badgeHotspotId) mappedHotspotIds.add(badgeHotspotId);
@@ -154,12 +154,18 @@ export function FormScreen() {
             <p className="text-zinc-600 text-sm leading-relaxed">{ad.formBody}</p>
           </div>
 
-          {remainingHotspots.length > 0 && (
+          {(remainingHotspots.length > 0 || ad.type === "Scam") && (
             <div className="p-6 border-b border-zinc-200">
               <div className="text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-3">
                 Details to review
               </div>
               <div className="space-y-2">
+                {ad.type === "Scam" && (
+                  <div className="flex flex-col gap-1 rounded-lg border border-zinc-200 bg-white px-3 py-3">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Original URL</span>
+                    <span className="text-sm font-mono text-zinc-700 break-all">{ad.originalUrl}</span>
+                  </div>
+                )}
                 {remainingHotspots.map((hotspot) => (
                   <Inspectable
                     key={hotspot.id}
@@ -169,7 +175,7 @@ export function FormScreen() {
                     className={active(hotspot.id) ? "block w-full px-3 py-2" : "block w-full"}
                   >
                     <div className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-3">
-                      <span className="text-sm font-medium text-zinc-800">{hotspot.label}</span>
+                      <span className="text-sm font-medium text-zinc-800 break-all">{hotspot.label}</span>
                     </div>
                   </Inspectable>
                 ))}
