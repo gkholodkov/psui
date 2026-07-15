@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router";
+import { ArrowUp } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 
 export function WelcomeScreen() {
@@ -24,8 +25,20 @@ export function WelcomeScreen() {
             replace
             className="w-full bg-[#E3B740] hover:bg-[#d6a935] text-zinc-900 py-5 rounded-[2.5rem] font-semibold text-xl text-center transition-colors shadow-sm"
           >
-            Start checking listings
+            Tap to start
           </Link>
+
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-1/2 top-full -translate-x-1/2 -translate-y-[23%]"
+          >
+            <div className="motion-safe:animate-[welcome-arrow-bob_2.4s_ease-in-out_infinite]">
+              <ArrowUp
+                className="h-[44vh] w-[20vw] min-w-14 max-w-48 text-[#E3B740] sm:h-[58vh] sm:w-[17vw] md:h-[72vh] md:w-[15vw] md:max-w-[220px]"
+                strokeWidth={1.25}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
