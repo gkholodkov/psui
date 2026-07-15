@@ -30,7 +30,7 @@ export function WelcomeScreen() {
 
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute left-1/2 top-full -translate-x-1/2 -translate-y-[23%]"
+            className="pointer-events-none absolute left-1/2 top-full -translate-x-1/2 -translate-y-[35%]"
           >
             <div className="motion-safe:animate-[welcome-arrow-bob_2.4s_ease-in-out_infinite]">
               <ArrowUp
