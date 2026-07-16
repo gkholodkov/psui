@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { type InspectablePosition, useAdInspection } from "../state/InspectionContext";
-import { ANSWER_OPTIONS, getExpectedChoice, ads } from "../data";
+import { getAnswerOptions, ads } from "../data";
 import { CheckCircle2, ChevronRight, XCircle } from "lucide-react";
 
 interface InspectableProps {
@@ -20,8 +20,6 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
 
-  const options = ANSWER_OPTIONS;
-
   useEffect(() => {
     if (!active) {
       setOpen(false);
@@ -31,6 +29,7 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
 
   if (!hotspot) return <>{children}</>;
 
+  const options = getAnswerOptions(hotspot);
   const chosen = state.classifications[hotspotId];
   const isCorrect = state.correct[hotspotId];
   const detailNumber = (ad?.inspectionOrder.indexOf(hotspotId) ?? -1) + 1;
@@ -121,12 +120,12 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
         </div>
         <div className="p-6">
           <div className="text-sm font-semibold text-zinc-700 mb-3">
-            What do you see here?
+            What kind of evidence is this?
           </div>
           <div className="flex flex-col gap-2">
             {options.map((option) => {
               const picked = chosen === option.value;
-              const isAnswer = getExpectedChoice(hotspot) === option.value;
+              const isAnswer = option.correct;
               const showResult = chosen !== undefined;
               return (
                 <button
@@ -164,7 +163,7 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
                     : "bg-yellow-50 border-yellow-200 text-yellow-900"
                 }`}
               >
-                {hotspot.choiceFeedback[chosen]}
+                {isCorrect ? hotspot.correctFeedback : hotspot.incorrectFeedback}
               </div>
               <button
                 type="button"

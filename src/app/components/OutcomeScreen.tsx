@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Link, Navigate, useParams } from "react-router";
-import { ANSWER_OPTIONS, ads, getExpectedChoice, type HotspotIcon } from "../data";
+import { ads, getExpectedChoice, type AnswerChoice, type HotspotIcon } from "../data";
 import { useAdInspection } from "../state/InspectionContext";
 import {
   AlertTriangle,
@@ -16,8 +16,8 @@ import {
   XCircle,
 } from "lucide-react";
 
-function choiceLabel(choice?: string) {
-  return ANSWER_OPTIONS.find((option) => option.value === choice)?.label ?? "Not checked";
+function choiceLabel(choice?: AnswerChoice) {
+  return choice ?? "Not checked";
 }
 
 function HintIcon({ icon }: { icon?: HotspotIcon }) {

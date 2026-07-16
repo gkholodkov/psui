@@ -5,14 +5,16 @@ export type TacticTag =
   | "Brand impersonation"
   | "Scarcity pressure"
   | "Safe payment timing"
-  | "It’s expected";
+  | "It’s expected"
+  | "Not enough evidence";
 
-export type AnswerChoice = "scam-hint" | "no-scam-hint";
+export type AnswerChoice = TacticTag;
 
-export const ANSWER_OPTIONS: { value: AnswerChoice; label: string }[] = [
-  { value: "scam-hint", label: "It hints scam" },
-  { value: "no-scam-hint", label: "It doesn’t hint scam" },
-];
+export interface AnswerOption {
+  value: AnswerChoice;
+  label: string;
+  correct: boolean;
+}
 
 export type HotspotIcon = "route" | "channel" | "data" | "payment" | "timing" | "neutral";
 
@@ -24,6 +26,7 @@ export const ALL_TACTICS: TacticTag[] = [
   "Scarcity pressure",
   "Safe payment timing",
   "It’s expected",
+  "Not enough evidence",
 ];
 
 export interface Hotspot {
@@ -35,9 +38,10 @@ export interface Hotspot {
   correctFeedback: string;
   incorrectFeedback: string;
   distractors: [TacticTag, TacticTag];
-  expectedChoice?: AnswerChoice;
   technique?: TacticTag;
-  choiceFeedback: Record<AnswerChoice, string>;
+  // Kept optional for compatibility with the original question copy. The UI
+  // now uses correctFeedback/incorrectFeedback for all tactic choices.
+  choiceFeedback?: Record<string, string>;
   outcomeHint?: string;
   icon?: HotspotIcon;
 }
@@ -90,7 +94,6 @@ export interface Ad {
   outcomeSafeTactic?: string;
   outcomeUnsafeBody?: string;
   relevantChecklistKeys: ChecklistKey[];
-  checklistExamples: { destination: string; channel: string; data: string; payment: string; pressure: string };
 }
 
 const rawAds: Ad[] = [
@@ -176,7 +179,7 @@ const rawAds: Ad[] = [
         label: "Price €430 warm",
         feedback: "€430 near campus may make you look twice, but price alone is no evidence of a scam. It is a reason to look closer, not a verdict.",
         mandatory: false,
-        tactic: "It’s expected",
+        tactic: "Not enough evidence",
         correctFeedback: "Correct. €430 is only a price signal; it does not prove a scam.",
         incorrectFeedback: "A low-looking price can make you suspicious, but it cannot tell you who is behind the listing. Check the process around it.",
         choiceFeedback: {
@@ -190,7 +193,7 @@ const rawAds: Ad[] = [
         label: "Availability: Immediately",
         feedback: "‘Immediately’ creates a sense of speed, but a move-in date is not the same as pressure. Look for language that punishes you for taking time to verify.",
         mandatory: false,
-        tactic: "It’s expected",
+        tactic: "Not enough evidence",
         correctFeedback: "Correct. `Immediately` describes availability; it does not create pressure by itself.",
         incorrectFeedback: "An immediate move-in date is not a demand. Look for a countdown or a threat to lose the room if you pause.",
         choiceFeedback: {
@@ -204,7 +207,7 @@ const rawAds: Ad[] = [
         label: "Contact: Anna M.",
         feedback: "A first name and initial can make a listing feel personal, but they do not verify who is really behind it.",
         mandatory: false,
-        tactic: "It’s expected",
+        tactic: "Not enough evidence",
         correctFeedback: "Correct. `Anna M.` is only a name; it does not verify the person.",
         incorrectFeedback: "A name makes the listing feel personal, but anyone can type a name. It does not verify the person.",
         choiceFeedback: {
@@ -225,13 +228,6 @@ const rawAds: Ad[] = [
     outcomeSafeTactic: "Brand impersonation + platform switching",
     outcomeUnsafeBody: "If you continued, you would hand over a student ID and move the conversation somewhere the original platform could not help you.",
     relevantChecklistKeys: ["destination", "channel", "data", "pressure"],
-    checklistExamples: {
-      destination: "‘imobilien-scout24.de’ looked like the original platform, but one letter was missing from the domain.",
-      channel: "The form tried to move the conversation to WhatsApp, away from the platform’s record.",
-      data: "A student ID was requested before anyone had confirmed the viewing.",
-      payment: "No payment was requested yet, but the data being collected could enable the next step of the fraud.",
-      pressure: "‘3 viewing slots left’ made the external redirect feel too urgent to question."
-    }
   },
   {
     id: "B",
@@ -331,7 +327,7 @@ const rawAds: Ad[] = [
         label: "Price €520 warm",
         feedback: "The price feels plausible for the area, which is mildly reassuring. But a believable number cannot vouch for the person or process behind it.",
         mandatory: false,
-        tactic: "It’s expected",
+        tactic: "Not enough evidence",
         correctFeedback: "Correct. €520 is plausible, but price cannot verify the listing.",
         incorrectFeedback: "A plausible rent is reassuring only in a small way. It cannot confirm the listing or landlord.",
         choiceFeedback: {
@@ -345,7 +341,7 @@ const rawAds: Ad[] = [
         label: "Availability: Next week",
         feedback: "Next week is soon enough to feel exciting, but the date itself is just information. The pressure comes from framing it as one of only ‘2 slots left’.",
         mandatory: false,
-        tactic: "It’s expected",
+        tactic: "Not enough evidence",
         correctFeedback: "Correct. `Next week` is a date; the pressure comes from `2 slots left`.",
         incorrectFeedback: "Next week is just a date. The pressure comes from the ‘2 slots left’ message, not the move-in date.",
         choiceFeedback: {
@@ -359,7 +355,7 @@ const rawAds: Ad[] = [
         label: "Contact: Lukas P.",
         feedback: "A friendly first name makes the listing feel human, but it still does not tell you who is accountable for the request.",
         mandatory: false,
-        tactic: "It’s expected",
+        tactic: "Not enough evidence",
         correctFeedback: "Correct. `Lukas P.` is a name, not identity verification.",
         incorrectFeedback: "A friendly name is not a check on identity. Look at what the process asks you to do.",
         choiceFeedback: {
@@ -394,13 +390,6 @@ const rawAds: Ad[] = [
     outcomeSafeTactic: "Data overcollection + advance payment",
     outcomeUnsafeBody: "If you submitted the form, you would share a passport or ID, an IBAN, and a holding deposit before seeing the room.",
     relevantChecklistKeys: ["destination", "channel", "data", "payment", "pressure"],
-    checklistExamples: {
-      destination: "The form stayed on a familiar-looking host, but its ‘re’ parameter pointed to a separate verification site.",
-      channel: "The conversation began on the platform, then the form took over before the viewing.",
-      data: "The form asked for a passport, IBAN, and address before you had seen the room.",
-      payment: "A €250 holding deposit was requested before a viewing or signed contract.",
-      pressure: "‘2 slots left this week’ made checking feel like a risk to your chance."
-    }
   },
   {
     id: "C",
@@ -442,8 +431,8 @@ const rawAds: Ad[] = [
         label: "www.immobilien-scout24.de/expose/wg-room-suedstadt-610",
         feedback: "The route stays on the housing platform, where the listing and conversation remain visible. That gives you somewhere to go back to if a question comes up.",
         mandatory: true,
-        tactic: "It’s expected",
-        correctFeedback: "Correct. The address stays on `immobilien-scout24.de`, the same platform as the listing.",
+        tactic: "Not enough evidence",
+        correctFeedback: "Correct. Staying on the same platform is reassuring, but this detail alone is not enough evidence that the listing is genuine.",
         incorrectFeedback: "This one stays on the same platform as the listing. That is reassuring, though it is not proof by itself.",
         choiceFeedback: {
           "scam-hint": "Not here. The address stays on the same platform as the listing, so the route itself gives no reason for suspicion.",
@@ -470,8 +459,8 @@ const rawAds: Ad[] = [
         label: "Documents: not required before viewing",
         feedback: "There is no request for documents before the viewing. The process lets you meet the situation first and handle paperwork when it is actually needed.",
         mandatory: true,
-        tactic: "It’s expected",
-        correctFeedback: "Correct. No documents are requested before viewing, so no sensitive data is collected too early.",
+        tactic: "Not enough evidence",
+        correctFeedback: "Correct. No documents are requested before viewing, but this detail alone is not enough evidence that the listing is genuine.",
         incorrectFeedback: "There is no early document request here. You can view the room before sharing sensitive paperwork.",
         choiceFeedback: {
           "scam-hint": "Not here. No documents are requested before the viewing. You can meet the situation before sharing sensitive information.",
@@ -484,7 +473,7 @@ const rawAds: Ad[] = [
         label: "Profile: active since 2021",
         feedback: "An account active since 2021 is useful context, but age alone cannot tell you who is behind the listing or whether this offer is right for you.",
         mandatory: false,
-        tactic: "It’s expected",
+        tactic: "Not enough evidence",
         correctFeedback: "Correct. An account active since 2021 is supporting context, not proof.",
         incorrectFeedback: "An older profile can be useful context, but it does not prove the listing is genuine. Treat it as background, not a warning.",
         choiceFeedback: {
@@ -498,7 +487,7 @@ const rawAds: Ad[] = [
         label: "Price €610 warm",
         feedback: "The price fits the area, which feels more believable than an impossibly cheap offer. Still, a number cannot confirm who is behind the listing.",
         mandatory: false,
-        tactic: "It’s expected",
+        tactic: "Not enough evidence",
         correctFeedback: "Correct. €610 is plausible, but price alone is not proof.",
         incorrectFeedback: "A plausible price is not a guarantee. It is simply not a scam signal on its own.",
         choiceFeedback: {
@@ -512,7 +501,7 @@ const rawAds: Ad[] = [
         label: "Availability: From 01.08.",
         feedback: "A date weeks away gives you room to verify, ask questions, and attend the viewing. That feels normal, though the date alone is not proof of anything.",
         mandatory: false,
-        tactic: "It’s expected",
+        tactic: "Not enough evidence",
         correctFeedback: "Correct. A date weeks away gives you time to verify; it is not proof by itself.",
         incorrectFeedback: "The date gives you time; it is not a warning by itself. Use that time to check the other details.",
         choiceFeedback: {
@@ -526,7 +515,7 @@ const rawAds: Ad[] = [
         label: "Contact: Jonas K.",
         feedback: "A first name and initial tell you who the listing claims to be from, not whether that identity is verified. Pair it with the platform trail.",
         mandatory: false,
-        tactic: "It’s expected",
+        tactic: "Not enough evidence",
         correctFeedback: "Correct. `Jonas K.` is only supporting context, not verified identity.",
         incorrectFeedback: "A name alone does not prove who is behind the listing. It is background information, not a scam signal.",
         choiceFeedback: {
@@ -546,13 +535,6 @@ const rawAds: Ad[] = [
       { label: "Urgency", evidence: "Viewing Thursday", interpretation: "There is time to verify instead of pressure to act immediately" }
     ],
     relevantChecklistKeys: ["destination", "channel", "data", "payment", "pressure"],
-    checklistExamples: {
-      destination: "The link stayed on ‘immobilien-scout24.de’, the same platform where the listing began.",
-      channel: "The conversation stayed on the platform; nobody asked you to disappear into WhatsApp.",
-      data: "No documents were requested just to earn a viewing.",
-      payment: "The deposit appeared only after the viewing and signed contract.",
-      pressure: "The viewing was scheduled normally, with no ‘today only’ countdown."
-    }
   }
 ];
 
@@ -566,10 +548,45 @@ const SCAM_TECHNIQUES: TacticTag[] = [
 
 const firstSentence = (text: string) => `${text.split(/[.!?]/)[0].trim()}.`;
 
-const expectedChoiceFromTactic = (tactic: TacticTag): AnswerChoice => {
-  if (SCAM_TECHNIQUES.includes(tactic)) return "scam-hint";
-  if (tactic === "It’s expected" || tactic === "Safe payment timing") return "no-scam-hint";
-  return "no-scam-hint";
+const expectedChoiceFromTactic = (tactic: TacticTag): AnswerChoice => tactic;
+
+const normalizeDistractors = (
+  correctChoice: AnswerChoice,
+  distractors: [TacticTag, TacticTag]
+): [TacticTag, TacticTag] => {
+  const uniqueDistractors = [...new Set(distractors)].filter((choice) => choice !== correctChoice);
+
+  if (correctChoice === "Not enough evidence") {
+    if (uniqueDistractors.length < 2) {
+      throw new Error(`Question with ${correctChoice} must have two unique distractors`);
+    }
+
+    return [uniqueDistractors[0], uniqueDistractors[1]];
+  }
+
+  const otherDistractor = uniqueDistractors.find((choice) => choice !== "Not enough evidence");
+  if (!otherDistractor) {
+    throw new Error(`Question with ${correctChoice} must have a non-evidence distractor`);
+  }
+
+  return ["Not enough evidence", otherDistractor];
+};
+
+const validateQuestion = (hotspot: Hotspot) => {
+  const choices = [hotspot.tactic, ...hotspot.distractors];
+  const uniqueChoices = new Set(choices);
+
+  if (choices.length !== 3 || uniqueChoices.size !== 3) {
+    throw new Error(`Question ${hotspot.id} must have exactly three unique options`);
+  }
+
+  if (choices.filter((choice) => choice === hotspot.tactic).length !== 1) {
+    throw new Error(`Question ${hotspot.id} must have exactly one correct option`);
+  }
+
+  if (!uniqueChoices.has("Not enough evidence")) {
+    throw new Error(`Question ${hotspot.id} must include Not enough evidence`);
+  }
 };
 
 const iconFromTactic = (tactic: TacticTag): HotspotIcon => {
@@ -584,27 +601,42 @@ const iconFromTactic = (tactic: TacticTag): HotspotIcon => {
 export const ads: Ad[] = rawAds.map((ad) => ({
   ...ad,
   hotspots: ad.hotspots.map((hotspot) => {
-    const expectedChoice = hotspot.expectedChoice ?? expectedChoiceFromTactic(hotspot.tactic);
+    const expectedChoice = expectedChoiceFromTactic(hotspot.tactic);
+    const normalizedDistractors = normalizeDistractors(expectedChoice, hotspot.distractors);
     const outcomeHint = hotspot.outcomeHint ?? firstSentence(hotspot.feedback);
     const choiceFeedback = hotspot.choiceFeedback;
 
-    return {
+    const normalizedHotspot: Hotspot = {
       ...hotspot,
-      expectedChoice,
+      distractors: normalizedDistractors,
       technique: SCAM_TECHNIQUES.includes(hotspot.tactic) ? hotspot.tactic : undefined,
       outcomeHint,
       icon: hotspot.icon ?? iconFromTactic(hotspot.tactic),
       choiceFeedback,
     };
+
+    validateQuestion(normalizedHotspot);
+    return normalizedHotspot;
   }),
 }));
 
 export function getExpectedChoice(hotspot: Hotspot): AnswerChoice {
-  return hotspot.expectedChoice ?? expectedChoiceFromTactic(hotspot.tactic);
+  return hotspot.tactic;
+}
+
+export function getAnswerOptions(hotspot: Hotspot): [AnswerOption, AnswerOption, AnswerOption] {
+  const correctChoice = getExpectedChoice(hotspot);
+  const choices = [...hotspot.distractors, correctChoice];
+
+  return choices.map((value) => ({
+    value,
+    label: value,
+    correct: value === correctChoice,
+  })) as [AnswerOption, AnswerOption, AnswerOption];
 }
 
 export interface ChecklistItem {
-  key: keyof Ad["checklistExamples"];
+  key: ChecklistKey;
   title: string;
   copy: string;
   detail: string;
