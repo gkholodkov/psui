@@ -32,10 +32,7 @@ export function Board() {
         <p className="text-xs uppercase tracking-[0.2em] text-zinc-500 font-semibold mb-3">
           Housing board
         </p>
-        <h1 className="text-3xl md:text-4xl font-bold mb-3">Which room would you trust?</h1>
-        <p className="text-zinc-600 max-w-xl mx-auto">
-          Three listings. Check the route, the requests, and the timing before you commit.
-        </p>
+        <h1 className="text-3xl md:text-4xl font-bold mb-3">Check these rooms, and find out which of them are scam</h1>
         <div className="mt-5 inline-flex items-center rounded-full bg-zinc-100 px-4 py-2 text-sm font-semibold text-zinc-700">
           {completedCount} of {ads.length} listings checked
         </div>
