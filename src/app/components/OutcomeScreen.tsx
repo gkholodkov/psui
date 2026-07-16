@@ -1,8 +1,43 @@
 import React, { useEffect } from "react";
 import { Link, Navigate, useParams } from "react-router";
-import { ads } from "../data";
+import { ANSWER_OPTIONS, ads, getExpectedChoice, type HotspotIcon } from "../data";
 import { useAdInspection } from "../state/InspectionContext";
-import { AlertTriangle, CheckCircle, ChevronRight, XCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  BadgeCheck,
+  CheckCircle,
+  ChevronRight,
+  CircleHelp,
+  Clock3,
+  CreditCard,
+  FileWarning,
+  Globe2,
+  MessageCircle,
+  XCircle,
+} from "lucide-react";
+
+function choiceLabel(choice?: string) {
+  return ANSWER_OPTIONS.find((option) => option.value === choice)?.label ?? "Not checked";
+}
+
+function HintIcon({ icon }: { icon?: HotspotIcon }) {
+  const className = "w-5 h-5";
+
+  switch (icon) {
+    case "route":
+      return <Globe2 className={className} />;
+    case "channel":
+      return <MessageCircle className={className} />;
+    case "data":
+      return <FileWarning className={className} />;
+    case "payment":
+      return <CreditCard className={className} />;
+    case "timing":
+      return <Clock3 className={className} />;
+    default:
+      return <CircleHelp className={className} />;
+  }
+}
 
 export function OutcomeScreen() {
   const { adId } = useParams();
@@ -24,8 +59,7 @@ export function OutcomeScreen() {
   const mandatoryCorrect = mandatory.filter(
     (hotspot) => inspection.state.correct[hotspot.id] === true
   ).length;
-  const threshold = Math.ceil(mandatory.length / 2);
-  const enoughEvidence = mandatoryChecked >= threshold;
+  const enoughEvidence = mandatoryCorrect >= 1;
   const correctVerdict =
     (inspection.state.verdict === "scam") === (ad.type === "Scam");
   const inspectedCount = inspection.state.tapped.size;
@@ -38,35 +72,41 @@ export function OutcomeScreen() {
 
   const headline = correctVerdict
     ? enoughEvidence
-      ? "You made the call — and you can show why"
-      : "Your instinct was right; now build the habit"
+      ? "Correct"
+      : "Correct answer, but not enough evidence"
     : enoughEvidence
-    ? "You found the important details, but the final call slipped"
-    : "The page moved faster than your evidence";
+    ? "Trust the hints you've spotted during inspection"
+    : "Stop and inspect before making a decision";
 
   const body = inspectedCount === 0
-    ? "You made the call without reviewing any highlighted details. Pause on the route, the requests, and the timing before you decide."
+    ? "You trusted luck instead of rationality. Estimate plausibility based on the facts before you decide."
     : correctVerdict
     ? enoughEvidence
-      ? "Your decision matched the listing, and your checks gave it a clear basis."
-      : "Your decision was right, but it was not backed by enough important checks. Good judgment is a repeatable habit, not a lucky guess."
+      ? "Your decision was correct, and was based on the facts. Great job."
+      : "Your decision was correct, but it was not backed by reality check. Good judgment is a repeatable habit, not a lucky guess."
     : enoughEvidence
-    ? "You did the important checks, but the verdict went the other way. Use the evidence to pause once more before you commit."
-    : "You did not have enough evidence to support the final call. Slow down and check the destination, data, payment, and pressure.";
+    ? "You spotted important details, but didn't trust them. Use the collected evidence to pause once more before you decide."
+    : "You need to stop for a moment and look for important hints before making a decision.";
 
   const tone = correctVerdict && enoughEvidence ? "success" : correctVerdict ? "warning" : "error";
   const reviewItems = [
     ...misclassified.map((hotspot) => ({
       id: `wrong-${hotspot.id}`,
       label: hotspot.label,
-      answer: hotspot.tactic,
-      copy: hotspot.incorrectFeedback,
+      selected: inspection.state.classifications[hotspot.id],
+      expected: getExpectedChoice(hotspot),
+      technique: hotspot.technique,
+      hint: hotspot.outcomeHint ?? hotspot.feedback,
+      icon: hotspot.icon,
     })),
     ...missedImportant.map((hotspot) => ({
       id: `missed-${hotspot.id}`,
       label: hotspot.label,
-      answer: hotspot.tactic,
-      copy: hotspot.feedback,
+      selected: undefined,
+      expected: getExpectedChoice(hotspot),
+      technique: hotspot.technique,
+      hint: hotspot.outcomeHint ?? hotspot.feedback,
+      icon: hotspot.icon,
     })),
   ];
 
@@ -114,25 +154,38 @@ export function OutcomeScreen() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-zinc-200 mb-6">
-          <h2 className="font-bold text-zinc-900 mb-2">Why this listing mattered</h2>
-          <p className="text-zinc-700 leading-relaxed">{ad.evidenceVerdict}</p>
-        </div>
-
         {reviewItems.length > 0 ? (
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-zinc-200 mb-6">
-            <h2 className="font-bold text-zinc-900 mb-1">Review these details</h2>
-            <p className="text-sm text-zinc-600 mb-4">
-              Focus on the few details that would change your next action.
-            </p>
+            <h2 className="font-bold text-zinc-900 mb-1">{enoughEvidence ? "Additional details you could inspect" : "Reasonable details to inspect"}</h2>
+            <br />
             <div className="space-y-3">
               {reviewItems.map((item) => (
                 <div key={item.id} className="rounded-xl bg-zinc-50 border border-zinc-200 p-4">
-                  <div className="font-bold text-zinc-900">{item.label}</div>
-                  <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-yellow-800">
-                    Read as: {item.answer}
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-full bg-[#E3B740]/30 flex items-center justify-center shrink-0 text-zinc-700">
+                      <HintIcon icon={item.icon} />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-bold text-zinc-900 break-all">{item.label}</div>
+                      <p className="mt-1 text-sm text-zinc-700 leading-relaxed">{item.hint}</p>
+                    </div>
                   </div>
-                  <p className="mt-2 text-sm text-zinc-700 leading-relaxed">{item.copy}</p>
+                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <div className="rounded-lg bg-white border border-zinc-200 px-3 py-2">
+                      <div className="text-zinc-500">Your choice</div>
+                      <div className="font-semibold text-zinc-800">{choiceLabel(item.selected)}</div>
+                    </div>
+                    <div className="rounded-lg bg-white border border-zinc-200 px-3 py-2">
+                      <div className="text-zinc-500">Expected</div>
+                      <div className="font-semibold text-zinc-800">{choiceLabel(item.expected)}</div>
+                    </div>
+                  </div>
+                  {item.technique && (
+                    <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-900">
+                      <BadgeCheck className="w-4 h-4" />
+                      Scam technique: {item.technique}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

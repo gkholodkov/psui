@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
-import { ads, type TacticTag } from "../data";
+import { ads, getExpectedChoice, type AnswerChoice } from "../data";
 
 export interface InspectablePosition {
   x: number;
@@ -27,7 +27,7 @@ export type Verdict = "scam" | "not-scam";
 
 export interface AdInspectionState {
   tapped: Set<string>;
-  classifications: Record<string, TacticTag>;
+  classifications: Record<string, AnswerChoice>;
   correct: Record<string, boolean>;
   selectedInspectable: SelectedInspectable | null;
   activeHotspotId: string | null;
@@ -41,7 +41,7 @@ interface ContextValue {
   tap: (adId: string, hotspotId: string) => void;
   selectInspectable: (adId: string, hotspotId: string, position: InspectablePosition) => void;
   clearSelectedInspectable: (adId: string, hotspotId?: string) => void;
-  classify: (adId: string, hotspotId: string, choice: TacticTag) => void;
+  classify: (adId: string, hotspotId: string, choice: AnswerChoice) => void;
   startInspection: (adId: string) => void;
   advance: (adId: string) => void;
   decide: (adId: string, verdict: Verdict) => void;
@@ -101,12 +101,12 @@ export function InspectionProvider({ children }: { children: React.ReactNode }) 
     });
   }, []);
 
-  const classify = useCallback((adId: string, hotspotId: string, choice: TacticTag) => {
+  const classify = useCallback((adId: string, hotspotId: string, choice: AnswerChoice) => {
     setByAd((prev) => {
       const cur = ensure(adId, prev);
       const ad = ads.find((a) => a.id === adId);
       const hotspot = ad?.hotspots.find((h) => h.id === hotspotId);
-      const isCorrect = hotspot ? hotspot.tactic === choice : false;
+      const isCorrect = hotspot ? getExpectedChoice(hotspot) === choice : false;
       const nextTapped = new Set(cur.tapped);
       nextTapped.add(hotspotId);
       return {
@@ -237,7 +237,7 @@ export function useAdInspection(adId: string) {
         ctx.selectInspectable(adId, hotspotId, position),
       clearSelectedInspectable: (hotspotId?: string) =>
         ctx.clearSelectedInspectable(adId, hotspotId),
-      classify: (hotspotId: string, choice: TacticTag) => ctx.classify(adId, hotspotId, choice),
+      classify: (hotspotId: string, choice: AnswerChoice) => ctx.classify(adId, hotspotId, choice),
       startInspection: () => ctx.startInspection(adId),
       advance: () => ctx.advance(adId),
       decide: (verdict: Verdict) => ctx.decide(adId, verdict),

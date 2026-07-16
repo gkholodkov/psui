@@ -69,7 +69,7 @@ export function AdDetail() {
               className="w-full min-h-16 bg-[#E3B740] hover:bg-[#d6a935] text-zinc-900 py-5 px-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors shadow-sm"
             >
               <Search className="w-6 h-6" />
-              Inspect the application
+              Inspect the listing
             </Link>
             <div className="grid grid-cols-2 gap-3">
               <button

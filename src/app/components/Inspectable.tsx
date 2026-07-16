@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { type InspectablePosition, useAdInspection } from "../state/InspectionContext";
-import { ads, type TacticTag } from "../data";
+import { ANSWER_OPTIONS, getExpectedChoice, ads } from "../data";
 import { CheckCircle2, ChevronRight, XCircle } from "lucide-react";
 
 interface InspectableProps {
@@ -20,10 +20,7 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
 
-  const options = useMemo<TacticTag[]>(() => {
-    if (!hotspot) return [];
-    return [hotspot.tactic, ...hotspot.distractors].sort((a, b) => a.localeCompare(b));
-  }, [hotspot]);
+  const options = ANSWER_OPTIONS;
 
   useEffect(() => {
     if (!active) {
@@ -36,7 +33,6 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
 
   const chosen = state.classifications[hotspotId];
   const isCorrect = state.correct[hotspotId];
-  const isTapped = state.tapped.has(hotspotId);
   const detailNumber = (ad?.inspectionOrder.indexOf(hotspotId) ?? -1) + 1;
 
   const getInspectablePosition = (): InspectablePosition | null => {
@@ -125,18 +121,18 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
         </div>
         <div className="p-6">
           <div className="text-sm font-semibold text-zinc-700 mb-3">
-            What does this detail suggest?
+            What do you see here?
           </div>
           <div className="flex flex-col gap-2">
-            {options.map((opt) => {
-              const picked = chosen === opt;
-              const isAnswer = hotspot.tactic === opt;
+            {options.map((option) => {
+              const picked = chosen === option.value;
+              const isAnswer = getExpectedChoice(hotspot) === option.value;
               const showResult = chosen !== undefined;
               return (
                 <button
-                  key={opt}
+                  key={option.value}
                   type="button"
-                  onClick={() => classify(hotspotId, opt)}
+                  onClick={() => classify(hotspotId, option.value)}
                   disabled={chosen !== undefined && !picked}
                   className={`text-left text-sm min-h-12 px-4 py-3 rounded-lg border transition-colors ${
                     showResult && picked && isAnswer
@@ -153,7 +149,7 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
                   <span className="inline-flex items-center gap-2">
                     {showResult && picked && isAnswer && <CheckCircle2 className="w-4 h-4" />}
                     {showResult && picked && !isAnswer && <XCircle className="w-4 h-4" />}
-                    {opt}
+                    {option.label}
                   </span>
                 </button>
               );
@@ -168,7 +164,7 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
                     : "bg-yellow-50 border-yellow-200 text-yellow-900"
                 }`}
               >
-                {isCorrect ? hotspot.correctFeedback : hotspot.incorrectFeedback}
+                {hotspot.choiceFeedback[chosen]}
               </div>
               <button
                 type="button"
