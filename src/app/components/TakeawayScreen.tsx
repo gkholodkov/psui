@@ -9,6 +9,7 @@ import {
   MapPin,
   MessageCircle,
   Play,
+  RotateCcw,
   Timer,
   X,
 } from "lucide-react";
@@ -68,16 +69,17 @@ export function TakeawayScreen() {
   const { completedAdIds, resetAll } = useInspectionContext();
   const [isRestarting, setIsRestarting] = useState(false);
   const [activeChecklistKey, setActiveChecklistKey] = useState<ChecklistKey | null>(null);
+  const [watchedChecklistKeys, setWatchedChecklistKeys] = useState<Set<ChecklistKey>>(new Set());
   const activeChecklist = checklist.find((item) => item.key === activeChecklistKey);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    document.body.style.overflow = activeChecklistKey ? "hidden" : "";
 
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, []);
+  }, [activeChecklistKey]);
 
   useEffect(() => {
     if (!activeChecklistKey) return;
@@ -96,13 +98,26 @@ export function TakeawayScreen() {
     resetAll();
   };
 
+  const markChecklistAsWatched = (checklistKey: ChecklistKey) => {
+    setWatchedChecklistKeys((currentKeys) => {
+      if (currentKeys.has(checklistKey)) return currentKeys;
+
+      return new Set(currentKeys).add(checklistKey);
+    });
+  };
+
+  const openChecklist = (checklistKey: ChecklistKey) => {
+    setActiveChecklistKey(checklistKey);
+    markChecklistAsWatched(checklistKey);
+  };
+
   if (!isRestarting && completedAdIds.size < ads.length) {
     return <Navigate to="/board" replace />;
   }
 
   return (
-    <main className="h-[100dvh] overflow-hidden bg-[#F5F5F5] p-4 text-zinc-900 sm:p-6">
-      <div className="mx-auto flex h-full max-w-3xl flex-col">
+    <main className="min-h-[100dvh] overflow-y-auto bg-[#F5F5F5] p-4 text-zinc-900 sm:p-6">
+      <div className="mx-auto max-w-3xl">
         <header className="shrink-0 pb-3 text-center sm:pb-4">
           <CheckCircle2 className="mx-auto mb-2 h-10 w-10 text-green-600 sm:h-12 sm:w-12" />
           <p className="mb-1 text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-zinc-500">
@@ -114,13 +129,13 @@ export function TakeawayScreen() {
           </p>
         </header>
 
-        <div className="grid min-h-0 flex-1 grid-rows-[repeat(5,minmax(0,1fr))] gap-2">
+        <div className="grid gap-2">
           {checklist.map((item) => (
             <button
               key={item.key}
               type="button"
-              onClick={() => setActiveChecklistKey(item.key)}
-              className="flex min-h-0 items-center gap-2 overflow-hidden rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-left shadow-sm transition-colors hover:border-[#b8912e] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E3B740] sm:gap-4 sm:px-4 sm:py-2"
+              onClick={() => openChecklist(item.key)}
+              className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-3 text-left shadow-sm transition-colors hover:border-[#b8912e] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E3B740] sm:gap-4 sm:px-4"
               aria-label={`Open ${item.title} takeaway`}
             >
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E3B740]/30 sm:h-11 sm:w-11">
@@ -131,8 +146,12 @@ export function TakeawayScreen() {
                 <div className="truncate text-sm text-zinc-700">{item.takeaway}</div>
               </div>
               <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-zinc-500">
-                <Play className="h-3.5 w-3.5 fill-current" />
-                Watch
+                {watchedChecklistKeys.has(item.key) ? (
+                  <RotateCcw className="h-3.5 w-3.5" />
+                ) : (
+                  <Play className="h-3.5 w-3.5 fill-current" />
+                )}
+                {watchedChecklistKeys.has(item.key) ? "Replay" : "Watch"}
               </span>
             </button>
           ))}
@@ -181,6 +200,7 @@ export function TakeawayScreen() {
               playsInline
               controls={false}
               preload="auto"
+              onEnded={() => markChecklistAsWatched(activeChecklist.key)}
               aria-label={checklistMedia[activeChecklist.key].alt}
             >
               <source src={checklistMedia[activeChecklist.key].video} type="video/mp4" />
