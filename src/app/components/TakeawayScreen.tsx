@@ -176,7 +176,7 @@ export function TakeawayScreen() {
             if (event.target === event.currentTarget) setActiveChecklistKey(null);
           }}
         >
-          <div className="flex max-h-full w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+          <div className="flex max-h-[95dvh] w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:w-[70vw]">
             <div className="flex shrink-0 items-center gap-3 border-b border-zinc-200 px-4 py-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#E3B740]/30">
                 <ChecklistIcon itemKey={activeChecklist.key} />
@@ -194,20 +194,24 @@ export function TakeawayScreen() {
 
             <video
               key={activeChecklist.key}
-              className="h-[38dvh] max-h-80 w-full shrink-0 bg-zinc-950 object-contain"
+              className="aspect-video w-full shrink-0 bg-zinc-950 object-cover"
               autoPlay
               muted
               playsInline
               controls={false}
               preload="auto"
-              onEnded={() => markChecklistAsWatched(activeChecklist.key)}
+              loop
+              onEnded={(event) => {
+                event.currentTarget.currentTime = 0;
+                void event.currentTarget.play();
+              }}
               aria-label={checklistMedia[activeChecklist.key].alt}
             >
               <source src={checklistMedia[activeChecklist.key].video} type="video/mp4" />
               Your browser does not support video playback.
             </video>
 
-            <div className="min-h-0 overflow-hidden px-4 py-4">
+            <div className="min-h-0 overflow-y-auto px-4 py-4">
               <p className="text-sm font-semibold text-zinc-800">{activeChecklist.copy}</p>
               <p className="mt-2 text-sm leading-relaxed text-zinc-600">{activeChecklist.detail}</p>
               <div className="mt-3 rounded-lg bg-[#E3B740]/20 px-3 py-2 text-sm font-bold text-zinc-900">
