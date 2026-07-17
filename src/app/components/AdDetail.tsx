@@ -43,20 +43,8 @@ export function AdDetail() {
               </span>
             </div>
 
-            <div className="whitespace-pre-wrap text-zinc-600 leading-relaxed mb-8">
+            <div className="whitespace-pre-wrap text-zinc-600 leading-relaxed">
               {ad.description}
-            </div>
-
-            <div className="bg-zinc-50 rounded-xl p-5 border border-zinc-200">
-              <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wider mb-4">Details to review</h2>
-              <dl className="space-y-3">
-                {Object.entries(ad.details).map(([key, value]) => (
-                  <div key={key} className="flex flex-col sm:flex-row sm:gap-4">
-                    <dt className="text-zinc-500 sm:w-1/3 text-sm">{key}</dt>
-                    <dd className="text-zinc-900 font-semibold text-sm sm:w-2/3 break-all">{value}</dd>
-                  </div>
-                ))}
-              </dl>
             </div>
           </div>
         </div>

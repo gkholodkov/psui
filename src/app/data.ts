@@ -158,7 +158,7 @@ const rawAds: Ad[] = [
           "scam-hint": "Yes. You are being asked for an ID before you have seen the room. That is too much personal information too early.",
           "no-scam-hint": "Not quite. An ID request could be normal later, but before a viewing it is an important warning.",
         },
-        distractors: ["It’s expected", "Safe payment timing"],
+        distractors: ["Not enough evidence", "Safe payment timing"],
       },
       {
         id: "h4",
@@ -175,34 +175,6 @@ const rawAds: Ad[] = [
         distractors: ["Data overcollection", "Safe payment timing"],
       },
       {
-        id: "h5",
-        label: "Price €430 warm",
-        feedback: "€430 near campus may make you look twice, but price alone is no evidence of a scam. It is a reason to look closer, not a verdict.",
-        mandatory: false,
-        tactic: "Not enough evidence",
-        correctFeedback: "Correct. €430 is only a price signal; it does not prove a scam.",
-        incorrectFeedback: "A low-looking price can make you suspicious, but it cannot tell you who is behind the listing. Check the process around it.",
-        choiceFeedback: {
-          "scam-hint": "Not on its own. €430 may be worth checking, but a price does not tell you whether the listing is genuine.",
-          "no-scam-hint": "Yes. A price by itself gives no reason to call the listing a scam. Check the link and requests instead.",
-        },
-        distractors: ["Advance payment", "Scarcity pressure"],
-      },
-      {
-        id: "h6",
-        label: "Availability: Immediately",
-        feedback: "‘Immediately’ creates a sense of speed, but a move-in date is not the same as pressure. Look for language that punishes you for taking time to verify.",
-        mandatory: false,
-        tactic: "Not enough evidence",
-        correctFeedback: "Correct. `Immediately` describes availability; it does not create pressure by itself.",
-        incorrectFeedback: "An immediate move-in date is not a demand. Look for a countdown or a threat to lose the room if you pause.",
-        choiceFeedback: {
-          "scam-hint": "Not on its own. ‘Immediately’ describes the move-in date; it does not force you to act now.",
-          "no-scam-hint": "Yes. An immediate move-in date can be normal. Look for a deadline or threat, not just a date.",
-        },
-        distractors: ["Scarcity pressure", "Advance payment"],
-      },
-      {
         id: "h7",
         label: "Contact: Anna M.",
         feedback: "A first name and initial can make a listing feel personal, but they do not verify who is really behind it.",
@@ -217,7 +189,7 @@ const rawAds: Ad[] = [
         distractors: ["Platform switching", "Brand impersonation"],
       }
     ],
-    inspectionOrder: ["h2", "h5", "h6", "h7", "h3", "h4"],
+    inspectionOrder: ["h2", "h7", "h3", "h4"],
     inspectInstruction: "Start at the top and follow each highlighted detail. Check the destination before you trust the form.",
     evidenceVerdict: "This route looks polished, but it takes you away from the accountable platform and asks for sensitive information too early.",
     evidenceList: [
@@ -292,7 +264,7 @@ const rawAds: Ad[] = [
           "scam-hint": "Yes. A passport or ID photo is sensitive information, and it is being requested before you have seen the room.",
           "no-scam-hint": "Not quite. The request is too early. Identity documents may be needed later, but not just to arrange a viewing.",
         },
-        distractors: ["Safe payment timing", "It’s expected"],
+        distractors: ["Safe payment timing", "Not enough evidence"],
       },
       {
         id: "h3",
@@ -306,7 +278,7 @@ const rawAds: Ad[] = [
           "scam-hint": "Yes. The €250 is due before a viewing or signed contract. Calling it refundable does not remove the risk of paying first.",
           "no-scam-hint": "Not quite. The important part is the timing: you are being asked to pay before you know what you are agreeing to.",
         },
-        distractors: ["Safe payment timing", "It’s expected"],
+        distractors: ["Safe payment timing", "Data overcollection"],
       },
       {
         id: "h4",
@@ -320,7 +292,7 @@ const rawAds: Ad[] = [
           "scam-hint": "Yes. An IBAN is bank information, and there is no reason to need it just to arrange a viewing.",
           "no-scam-hint": "Not quite. This is not a normal viewing detail. Asking for bank information before the listing is checked is a warning.",
         },
-        distractors: ["Safe payment timing", "It’s expected"],
+        distractors: ["Scarcity pressure", "Not enough evidence"],
       },
       {
         id: "h5",
@@ -337,34 +309,6 @@ const rawAds: Ad[] = [
         distractors: ["Advance payment", "Platform switching"],
       },
       {
-        id: "h6",
-        label: "Availability: Next week",
-        feedback: "Next week is soon enough to feel exciting, but the date itself is just information. The pressure comes from framing it as one of only ‘2 slots left’.",
-        mandatory: false,
-        tactic: "Not enough evidence",
-        correctFeedback: "Correct. `Next week` is a date; the pressure comes from `2 slots left`.",
-        incorrectFeedback: "Next week is just a date. The pressure comes from the ‘2 slots left’ message, not the move-in date.",
-        choiceFeedback: {
-          "scam-hint": "Not on its own. ‘Next week’ is just a date. The warning is the separate message saying only two slots remain.",
-          "no-scam-hint": "Yes. A viewing next week is ordinary. The date itself does not give a reason for suspicion.",
-        },
-        distractors: ["Scarcity pressure", "Platform switching"],
-      },
-      {
-        id: "h7",
-        label: "Contact: Lukas P.",
-        feedback: "A friendly first name makes the listing feel human, but it still does not tell you who is accountable for the request.",
-        mandatory: false,
-        tactic: "Not enough evidence",
-        correctFeedback: "Correct. `Lukas P.` is a name, not identity verification.",
-        incorrectFeedback: "A friendly name is not a check on identity. Look at what the process asks you to do.",
-        choiceFeedback: {
-          "scam-hint": "Not on its own. A friendly name can be genuine, but it does not verify who is asking for your documents or money.",
-          "no-scam-hint": "Yes. Giving a name is normal. On its own, it does not suggest a scam.",
-        },
-        distractors: ["Brand impersonation", "Platform switching"],
-      },
-      {
         id: "h8",
         label: "www.immobilien-scout24.de/secure-check/wg-suedstadt-1184?re=https%3A%2F%2Fimmobilien-check24.de%2Fstart%3Fflat%3DWG1184",
         feedback: "Compare this current address with the original URL shown below. The form uses a secure-check path with a redirect parameter to another domain.",
@@ -379,7 +323,7 @@ const rawAds: Ad[] = [
         distractors: ["Scarcity pressure", "Advance payment"],
       }
     ],
-    inspectionOrder: ["h8", "h1", "h5", "h6", "h7", "h2", "h4", "h3"],
+    inspectionOrder: ["h8", "h1", "h5", "h2", "h4", "h3"],
     inspectInstruction: "Read the form from top to bottom. Notice what it asks you to share or pay before a viewing.",
     evidenceVerdict: "The friendly presentation hides a risky process: sensitive data and a deposit are requested before you have seen the room.",
     evidenceList: [
@@ -466,7 +410,7 @@ const rawAds: Ad[] = [
           "scam-hint": "Not here. No documents are requested before the viewing. You can meet the situation before sharing sensitive information.",
           "no-scam-hint": "Yes. Not asking for documents before a viewing is the expected approach.",
         },
-        distractors: ["Data overcollection", "It’s expected"],
+        distractors: ["Data overcollection", "Advance payment"],
       },
       {
         id: "h4",
@@ -482,50 +426,8 @@ const rawAds: Ad[] = [
         },
         distractors: ["Platform switching", "Brand impersonation"],
       },
-      {
-        id: "h5",
-        label: "Price €610 warm",
-        feedback: "The price fits the area, which feels more believable than an impossibly cheap offer. Still, a number cannot confirm who is behind the listing.",
-        mandatory: false,
-        tactic: "Not enough evidence",
-        correctFeedback: "Correct. €610 is plausible, but price alone is not proof.",
-        incorrectFeedback: "A plausible price is not a guarantee. It is simply not a scam signal on its own.",
-        choiceFeedback: {
-          "scam-hint": "Not on its own. A price that fits the area is not a scam signal, though it cannot prove the listing is genuine either.",
-          "no-scam-hint": "Yes. The price looks plausible, and by itself it gives no reason for suspicion.",
-        },
-        distractors: ["Advance payment", "Platform switching"],
-      },
-      {
-        id: "h6",
-        label: "Availability: From 01.08.",
-        feedback: "A date weeks away gives you room to verify, ask questions, and attend the viewing. That feels normal, though the date alone is not proof of anything.",
-        mandatory: false,
-        tactic: "Not enough evidence",
-        correctFeedback: "Correct. A date weeks away gives you time to verify; it is not proof by itself.",
-        incorrectFeedback: "The date gives you time; it is not a warning by itself. Use that time to check the other details.",
-        choiceFeedback: {
-          "scam-hint": "Not on its own. A date weeks away gives you time to check the details; it does not push you to act.",
-          "no-scam-hint": "Yes. Having time before the viewing is normal. The date itself gives no reason for suspicion.",
-        },
-        distractors: ["Platform switching", "Scarcity pressure"],
-      },
-      {
-        id: "h7",
-        label: "Contact: Jonas K.",
-        feedback: "A first name and initial tell you who the listing claims to be from, not whether that identity is verified. Pair it with the platform trail.",
-        mandatory: false,
-        tactic: "Not enough evidence",
-        correctFeedback: "Correct. `Jonas K.` is only supporting context, not verified identity.",
-        incorrectFeedback: "A name alone does not prove who is behind the listing. It is background information, not a scam signal.",
-        choiceFeedback: {
-          "scam-hint": "Not on its own. A name is normal background information, but it does not prove who is behind the listing.",
-          "no-scam-hint": "Yes. It is typical for a listing to include a name. On its own, it gives no reason for suspicion.",
-        },
-        distractors: ["Platform switching", "Brand impersonation"],
-      }
     ],
-    inspectionOrder: ["h1", "h5", "h6", "h7", "h2", "h3", "h4"],
+    inspectionOrder: ["h1", "h4", "h2", "h3"],
     inspectInstruction: "Follow the page from top to bottom. Look for the details that make the process verifiable, not just polished.",
     evidenceVerdict: "This offer is not safe because it looks tidy. It is safer because the route, timing, and requests leave room for you to verify before committing.",
     evidenceList: [
@@ -624,9 +526,35 @@ export function getExpectedChoice(hotspot: Hotspot): AnswerChoice {
   return hotspot.tactic;
 }
 
+const createSeededRandom = (seedText: string) => {
+  let seed = 0;
+
+  for (let index = 0; index < seedText.length; index += 1) {
+    seed = (Math.imul(seed, 31) + seedText.charCodeAt(index)) >>> 0;
+  }
+
+  return () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+};
+
+const shuffleOptions = <T,>(items: T[], seedText: string): T[] => {
+  const shuffled = [...items];
+  const random = createSeededRandom(seedText);
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+
+  return shuffled;
+};
+
 export function getAnswerOptions(hotspot: Hotspot): [AnswerOption, AnswerOption, AnswerOption] {
   const correctChoice = getExpectedChoice(hotspot);
-  const choices = [...hotspot.distractors, correctChoice];
+  // Keep the order stable for this detail while preventing position from being a clue.
+  const choices = shuffleOptions([...hotspot.distractors, correctChoice], hotspot.label);
 
   return choices.map((value) => ({
     value,

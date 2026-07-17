@@ -12,11 +12,11 @@ import {
   Timer,
   X,
 } from "lucide-react";
-import destinationVideo from "../../../assets/video_destination.mp4";
-import channelVideo from "../../../assets/video_channel.mp4";
-import dataVideo from "../../../assets/video_data.mp4";
-import paymentVideo from "../../../assets/video_payment.mp4";
-import pressureVideo from "../../../assets/video_pressure.mp4";
+import destinationVideo from "../../../assets/video1.mp4";
+import channelVideo from "../../../assets/video2.mp4";
+import dataVideo from "../../../assets/video3.mp4";
+import paymentVideo from "../../../assets/video4.mp4";
+import pressureVideo from "../../../assets/video5.mp4";
 
 type ChecklistMedia = {
   video: string;
