@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, Navigate } from "react-router";
 import { ads } from "../data";
 import { Lock } from "lucide-react";
@@ -19,28 +19,66 @@ const FORM_SPOTLIGHT_INITIAL_DELAY_MS = 1000;
 const FORM_SPOTLIGHT_FADE_MS = 300;
 const FORM_SPOTLIGHT_HOLD_MS = 2000;
 
-const FORM_HOTSPOT_BY_AD: Record<string, Record<string, string>> = {
-  A: {
-    "Upload student ID": "h3",
-    "Continue to WhatsApp confirmation": "h4",
-  },
-  B: {
-    "Passport or ID photo": "h2",
-    "Refundable holding deposit: €250": "h3",
-    "IBAN for identity confirmation": "h4",
-  },
-  C: {
-    "Deposit: after contract": "h2",
-    "Documents: not required before viewing": "h3",
-    "Profile: active since 2021": "h4",
-  },
-};
+const FORM_SPOTLIGHT_STEPS: Array<[FormSpotlightPhase, number]> = [
+  ["entering", FORM_SPOTLIGHT_INITIAL_DELAY_MS],
+  ["spotlight", FORM_SPOTLIGHT_INITIAL_DELAY_MS + FORM_SPOTLIGHT_FADE_MS],
+  [
+    "exiting",
+    FORM_SPOTLIGHT_INITIAL_DELAY_MS + FORM_SPOTLIGHT_FADE_MS + FORM_SPOTLIGHT_HOLD_MS,
+  ],
+  [
+    "complete",
+    FORM_SPOTLIGHT_INITIAL_DELAY_MS +
+      FORM_SPOTLIGHT_FADE_MS +
+      FORM_SPOTLIGHT_HOLD_MS +
+      FORM_SPOTLIGHT_FADE_MS,
+  ],
+];
+
+function SpotlightMask({ rect, dimmed }: { rect: SpotlightRect; dimmed: boolean }) {
+  const overlayClass =
+    "fixed pointer-events-none z-[80] bg-zinc-950/55 transition-opacity duration-300 " +
+    (dimmed ? "opacity-100" : "opacity-0");
+
+  return (
+    <>
+      <div
+        className={`${overlayClass} top-0 left-0 right-0`}
+        style={{ height: Math.max(0, rect.top - 8) }}
+        aria-hidden="true"
+      />
+      <div
+        className={`${overlayClass} left-0`}
+        style={{
+          top: Math.max(0, rect.top - 8),
+          bottom: Math.max(0, window.innerHeight - rect.bottom - 8),
+          width: Math.max(0, rect.left - 8),
+        }}
+        aria-hidden="true"
+      />
+      <div
+        className={`${overlayClass} right-0`}
+        style={{
+          top: Math.max(0, rect.top - 8),
+          bottom: Math.max(0, window.innerHeight - rect.bottom - 8),
+          width: Math.max(0, window.innerWidth - rect.right - 8),
+        }}
+        aria-hidden="true"
+      />
+      <div
+        className={`${overlayClass} bottom-0 left-0 right-0`}
+        style={{ top: Math.min(window.innerHeight, rect.bottom + 8) }}
+        aria-hidden="true"
+      />
+    </>
+  );
+}
 
 export function FormScreen() {
   const { adId } = useParams();
   const navigate = useNavigate();
   const ad = ads.find((item) => item.id === adId);
-  const inspection = useAdInspection(adId ?? "");
+  const { state, decide, isCompleted, startInspection } = useAdInspection(adId ?? "");
   const [filledFields, setFilledFields] = useState<Record<string, boolean>>({});
   const [spotlightPhase, setSpotlightPhase] = useState<FormSpotlightPhase>("initial");
   const [spotlightRect, setSpotlightRect] = useState<SpotlightRect | null>(null);
@@ -52,9 +90,6 @@ export function FormScreen() {
     spotlightPhase === "spotlight" ||
     spotlightPhase === "exiting";
   const spotlightDimmed = spotlightPhase === "spotlight";
-  const spotlightOverlayClass =
-    "fixed pointer-events-none z-[80] bg-zinc-950/55 transition-opacity duration-300 " +
-    (spotlightDimmed ? "opacity-100" : "opacity-0");
 
   const withSpotlightClass = (hotspotId: string, className: string) =>
     [
@@ -67,35 +102,16 @@ export function FormScreen() {
 
   useEffect(() => {
     scrollContainerRef.current?.scrollTo(0, 0);
-    if (adId) {
-      inspection.setActive();
-      inspection.startInspection();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [adId]);
+    if (adId) startInspection();
+  }, [adId, startInspection]);
 
   useEffect(() => {
     setSpotlightPhase("initial");
+    const timers = FORM_SPOTLIGHT_STEPS.map(([phase, delay]) =>
+      window.setTimeout(() => setSpotlightPhase(phase), delay)
+    );
 
-    const enteringTimer = window.setTimeout(() => {
-      setSpotlightPhase("entering");
-    }, FORM_SPOTLIGHT_INITIAL_DELAY_MS);
-    const spotlightTimer = window.setTimeout(() => {
-      setSpotlightPhase("spotlight");
-    }, FORM_SPOTLIGHT_INITIAL_DELAY_MS + FORM_SPOTLIGHT_FADE_MS);
-    const exitingTimer = window.setTimeout(() => {
-      setSpotlightPhase("exiting");
-    }, FORM_SPOTLIGHT_INITIAL_DELAY_MS + FORM_SPOTLIGHT_FADE_MS + FORM_SPOTLIGHT_HOLD_MS);
-    const finishTimer = window.setTimeout(() => {
-      setSpotlightPhase("complete");
-    }, FORM_SPOTLIGHT_INITIAL_DELAY_MS + FORM_SPOTLIGHT_FADE_MS + FORM_SPOTLIGHT_HOLD_MS + FORM_SPOTLIGHT_FADE_MS);
-
-    return () => {
-      window.clearTimeout(enteringTimer);
-      window.clearTimeout(spotlightTimer);
-      window.clearTimeout(exitingTimer);
-      window.clearTimeout(finishTimer);
-    };
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, [adId]);
 
   useEffect(() => {
@@ -126,23 +142,22 @@ export function FormScreen() {
     };
   }, [spotlightEngaged]);
 
-  if (!ad || inspection.isCompleted) return <Navigate to="/board" replace />;
+  if (!ad || isCompleted) return <Navigate to="/board" replace />;
 
-  const hotspotMap = FORM_HOTSPOT_BY_AD[ad.id] ?? {};
-  const mappedHotspotIds = new Set(Object.values(hotspotMap));
-  const urlHotspotId = ad.id === "A" ? "h2" : ad.id === "B" ? "h8" : "h1";
-  const badgeHotspotId = ad.id === "B" && ad.formBadge ? "h1" : null;
-  if (urlHotspotId) mappedHotspotIds.add(urlHotspotId);
-  if (badgeHotspotId) mappedHotspotIds.add(badgeHotspotId);
+  const mappedHotspotIds = new Set([ad.formUrlHotspotId]);
+  ad.formFields.forEach((field) => {
+    if (field.hotspotId) mappedHotspotIds.add(field.hotspotId);
+  });
+  if (ad.formBadgeHotspotId) mappedHotspotIds.add(ad.formBadgeHotspotId);
 
   const remainingHotspots = ad.hotspots.filter((hotspot) => !mappedHotspotIds.has(hotspot.id));
 
   const handleDecision = (verdict: Verdict) => {
-    inspection.decide(verdict);
+    decide(verdict);
     navigate(`/ad/${ad.id}/outcome`, { replace: true });
   };
 
-  const active = (hotspotId: string) => inspection.state.activeHotspotId === hotspotId;
+  const active = (hotspotId: string) => state.activeHotspotId === hotspotId;
 
   const renderField = (label: string, demoValue: string, hotspotId?: string) => {
     const content = (
@@ -188,11 +203,7 @@ export function FormScreen() {
       ref={scrollContainerRef}
       className="h-[100dvh] overflow-y-auto overscroll-none bg-[#F5F5F5] flex flex-col text-zinc-900 pt-44"
     >
-      <div
-        className={
-          "fixed top-20 left-0 right-0 z-10 bg-zinc-100 border-b border-zinc-300 shadow-sm flex flex-col"
-        }
-      >
+      <div className="fixed top-20 left-0 right-0 z-10 bg-zinc-100 border-b border-zinc-300 shadow-sm flex flex-col">
         <div className="h-10 bg-zinc-200 flex items-center px-4 gap-2 border-b border-zinc-300">
           <div className="flex gap-1.5">
             <div className="w-3 h-3 rounded-full bg-zinc-400" />
@@ -201,29 +212,22 @@ export function FormScreen() {
           </div>
         </div>
         <div className="flex items-center gap-4 p-2 bg-zinc-100">
-          {urlHotspotId ? (
-            <div ref={spotlightTargetRef} className="flex-1 min-w-0">
-              <Inspectable
-                adId={ad.id}
-                hotspotId={urlHotspotId}
-                active={active(urlHotspotId)}
-                className={withSpotlightClass(
-                  urlHotspotId,
-                  active(urlHotspotId) ? "block w-full px-1" : "block w-full"
-                )}
-              >
-                <div className="bg-white border border-zinc-300 rounded-md px-3 py-1.5 text-sm flex items-center gap-2 overflow-hidden shadow-sm">
-                  <Lock className="w-3 h-3 text-zinc-400 shrink-0" />
-                  <span className="text-zinc-600 truncate font-mono text-xs">{ad.formUrl}</span>
-                </div>
-              </Inspectable>
-            </div>
-          ) : (
-            <div className="flex-1 bg-white border border-zinc-300 rounded-md px-3 py-1.5 text-sm flex items-center gap-2 overflow-hidden shadow-sm">
-              <Lock className="w-3 h-3 text-zinc-400 shrink-0" />
-              <span className="text-zinc-600 truncate font-mono text-xs">{ad.formUrl}</span>
-            </div>
-          )}
+          <div ref={spotlightTargetRef} className="flex-1 min-w-0">
+            <Inspectable
+              adId={ad.id}
+              hotspotId={ad.formUrlHotspotId}
+              active={active(ad.formUrlHotspotId)}
+              className={withSpotlightClass(
+                ad.formUrlHotspotId,
+                active(ad.formUrlHotspotId) ? "block w-full px-1" : "block w-full"
+              )}
+            >
+              <div className="bg-white border border-zinc-300 rounded-md px-3 py-1.5 text-sm flex items-center gap-2 overflow-hidden shadow-sm">
+                <Lock className="w-3 h-3 text-zinc-400 shrink-0" />
+                <span className="text-zinc-600 truncate font-mono text-xs">{ad.formUrl}</span>
+              </div>
+            </Inspectable>
+          </div>
         </div>
       </div>
 
@@ -232,14 +236,16 @@ export function FormScreen() {
           <div className="p-6 border-b border-zinc-200">
             <h1 className="text-2xl font-bold text-zinc-900 mb-2">{ad.formTitle}</h1>
             {ad.formBadge && (
-              badgeHotspotId ? (
+              ad.formBadgeHotspotId ? (
                 <Inspectable
                   adId={ad.id}
-                  hotspotId={badgeHotspotId}
-                  active={active(badgeHotspotId)}
+                  hotspotId={ad.formBadgeHotspotId}
+                  active={active(ad.formBadgeHotspotId)}
                   className={withSpotlightClass(
-                    badgeHotspotId,
-                    active(badgeHotspotId) ? "inline-block mb-4 px-1" : "inline-block mb-4"
+                    ad.formBadgeHotspotId,
+                    active(ad.formBadgeHotspotId)
+                      ? "inline-block mb-4 px-1"
+                      : "inline-block mb-4"
                   )}
                 >
                   <span className="inline-block bg-yellow-50 text-yellow-700 border border-yellow-200 text-xs font-semibold px-2 py-1 rounded">
@@ -290,7 +296,9 @@ export function FormScreen() {
               What the form asks for
             </div>
             <div className="space-y-4">
-              {ad.formFields.map((field) => renderField(field.label, field.demoValue, hotspotMap[field.label]))}
+              {ad.formFields.map((field) =>
+                renderField(field.label, field.demoValue, field.hotspotId)
+              )}
             </div>
             {ad.formFooter && <p className="mt-6 text-xs text-zinc-500 text-center">{ad.formFooter}</p>}
           </div>
@@ -298,36 +306,7 @@ export function FormScreen() {
       </div>
 
       {spotlightEngaged && spotlightRect && (
-        <>
-          <div
-            className={spotlightOverlayClass + " top-0 left-0 right-0"}
-            style={{ height: Math.max(0, spotlightRect.top - 8) }}
-            aria-hidden="true"
-          />
-          <div
-            className={spotlightOverlayClass + " left-0"}
-            style={{
-              top: Math.max(0, spotlightRect.top - 8),
-              bottom: Math.max(0, window.innerHeight - spotlightRect.bottom - 8),
-              width: Math.max(0, spotlightRect.left - 8),
-            }}
-            aria-hidden="true"
-          />
-          <div
-            className={spotlightOverlayClass + " right-0"}
-            style={{
-              top: Math.max(0, spotlightRect.top - 8),
-              bottom: Math.max(0, window.innerHeight - spotlightRect.bottom - 8),
-              width: Math.max(0, window.innerWidth - spotlightRect.right - 8),
-            }}
-            aria-hidden="true"
-          />
-          <div
-            className={spotlightOverlayClass + " bottom-0 left-0 right-0"}
-            style={{ top: Math.min(window.innerHeight, spotlightRect.bottom + 8) }}
-            aria-hidden="true"
-          />
-        </>
+        <SpotlightMask rect={spotlightRect} dimmed={spotlightDimmed} />
       )}
 
       <InspectOverlay adId={ad.id} onDecide={handleDecision} />

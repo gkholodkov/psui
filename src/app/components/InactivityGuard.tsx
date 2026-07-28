@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import {
   AlertDialog,
@@ -95,14 +95,6 @@ export function InactivityGuard() {
       });
       clearInactivityTimer();
     };
-  }, [clearInactivityTimer, isRootPage, scheduleInactivityPrompt]);
-
-  useEffect(() => {
-    if (isRootPage) {
-      clearInactivityTimer();
-    } else if (!promptOpenRef.current) {
-      scheduleInactivityPrompt();
-    }
   }, [clearInactivityTimer, isRootPage, pathname, scheduleInactivityPrompt]);
 
   useEffect(() => {

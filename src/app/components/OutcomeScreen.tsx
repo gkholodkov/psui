@@ -1,6 +1,12 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Link, Navigate, useParams } from "react-router";
-import { ads, getExpectedChoice, type AnswerChoice, type HotspotIcon } from "../data";
+import {
+  ads,
+  getExpectedChoice,
+  type AnswerChoice,
+  type Hotspot,
+  type HotspotIcon,
+} from "../data";
 import { useAdInspection } from "../state/InspectionContext";
 import {
   AlertTriangle,
@@ -18,6 +24,59 @@ import {
 
 function choiceLabel(choice?: AnswerChoice) {
   return choice ?? "Not checked";
+}
+
+type OutcomeTone = "success" | "warning" | "error";
+
+function getOutcomePresentation(
+  correctVerdict: boolean,
+  enoughEvidence: boolean,
+  inspectedCount: number
+): { headline: string; body: string; tone: OutcomeTone } {
+  let headline: string;
+  if (correctVerdict) {
+    headline = enoughEvidence ? "Correct" : "Correct answer, but not enough evidence";
+  } else {
+    headline = enoughEvidence
+      ? "Trust the hints you've spotted during inspection"
+      : "Stop and inspect before making a decision";
+  }
+
+  let body: string;
+  if (inspectedCount === 0) {
+    body =
+      "You trusted luck instead of rationality. Estimate plausibility based on the facts before you decide.";
+  } else if (correctVerdict && enoughEvidence) {
+    body = "Your decision was correct, and was based on the facts. Great job.";
+  } else if (correctVerdict) {
+    body =
+      "Your decision was correct, but it was not backed by reality check. Good judgment is a repeatable habit, not a lucky guess.";
+  } else if (enoughEvidence) {
+    body =
+      "You spotted important details, but didn't trust them. Use the collected evidence to pause once more before you decide.";
+  } else {
+    body = "You need to stop for a moment and look for important hints before making a decision.";
+  }
+
+  const tone = correctVerdict && enoughEvidence ? "success" : correctVerdict ? "warning" : "error";
+
+  return { headline, body, tone };
+}
+
+function createReviewItem(
+  hotspot: Hotspot,
+  kind: "wrong" | "missed",
+  selected?: AnswerChoice
+) {
+  return {
+    id: `${kind}-${hotspot.id}`,
+    label: hotspot.label,
+    selected,
+    expected: getExpectedChoice(hotspot),
+    technique: hotspot.technique,
+    hint: hotspot.outcomeHint ?? hotspot.feedback,
+    icon: hotspot.icon,
+  };
 }
 
 function HintIcon({ icon }: { icon?: HotspotIcon }) {
@@ -42,76 +101,40 @@ function HintIcon({ icon }: { icon?: HotspotIcon }) {
 export function OutcomeScreen() {
   const { adId } = useParams();
   const ad = ads.find((item) => item.id === adId);
-  const inspection = useAdInspection(adId ?? "");
+  const { state, complete, sessionComplete } = useAdInspection(adId ?? "");
 
   useEffect(() => {
-    if (ad && inspection.state.verdict) {
-      inspection.complete();
-    }
-  }, [ad, inspection.complete, inspection.state.verdict]);
+    if (ad && state.verdict) complete();
+  }, [ad, complete, state.verdict]);
 
-  if (!ad || !inspection.state.verdict) return <Navigate to="/board" replace />;
+  if (!ad || !state.verdict) return <Navigate to="/board" replace />;
 
   const mandatory = ad.hotspots.filter((hotspot) => hotspot.mandatory);
-  const mandatoryChecked = mandatory.filter(
-    (hotspot) => inspection.state.classifications[hotspot.id] !== undefined
-  ).length;
   const mandatoryCorrect = mandatory.filter(
-    (hotspot) => inspection.state.correct[hotspot.id] === true
+    (hotspot) => state.correct[hotspot.id] === true
   ).length;
   const enoughEvidence = mandatoryCorrect >= 1;
-  const correctVerdict =
-    (inspection.state.verdict === "scam") === (ad.type === "Scam");
-  const inspectedCount = inspection.state.tapped.size;
-  const misclassified = ad.hotspots.filter(
-    (hotspot) => inspection.state.correct[hotspot.id] === false
-  );
+  const correctVerdict = (state.verdict === "scam") === (ad.type === "Scam");
+  const inspectedCount = state.tapped.size;
+  const misclassified = ad.hotspots.filter((hotspot) => state.correct[hotspot.id] === false);
   const missedImportant = mandatory.filter(
-    (hotspot) => inspection.state.classifications[hotspot.id] === undefined
+    (hotspot) => state.classifications[hotspot.id] === undefined
   );
 
-  const headline = correctVerdict
-    ? enoughEvidence
-      ? "Correct"
-      : "Correct answer, but not enough evidence"
-    : enoughEvidence
-    ? "Trust the hints you've spotted during inspection"
-    : "Stop and inspect before making a decision";
-
-  const body = inspectedCount === 0
-    ? "You trusted luck instead of rationality. Estimate plausibility based on the facts before you decide."
-    : correctVerdict
-    ? enoughEvidence
-      ? "Your decision was correct, and was based on the facts. Great job."
-      : "Your decision was correct, but it was not backed by reality check. Good judgment is a repeatable habit, not a lucky guess."
-    : enoughEvidence
-    ? "You spotted important details, but didn't trust them. Use the collected evidence to pause once more before you decide."
-    : "You need to stop for a moment and look for important hints before making a decision.";
-
-  const tone = correctVerdict && enoughEvidence ? "success" : correctVerdict ? "warning" : "error";
+  const { headline, body, tone } = getOutcomePresentation(
+    correctVerdict,
+    enoughEvidence,
+    inspectedCount
+  );
   const reviewItems = [
-    ...misclassified.map((hotspot) => ({
-      id: `wrong-${hotspot.id}`,
-      label: hotspot.label,
-      selected: inspection.state.classifications[hotspot.id],
-      expected: getExpectedChoice(hotspot),
-      technique: hotspot.technique,
-      hint: hotspot.outcomeHint ?? hotspot.feedback,
-      icon: hotspot.icon,
-    })),
-    ...missedImportant.map((hotspot) => ({
-      id: `missed-${hotspot.id}`,
-      label: hotspot.label,
-      selected: undefined,
-      expected: getExpectedChoice(hotspot),
-      technique: hotspot.technique,
-      hint: hotspot.outcomeHint ?? hotspot.feedback,
-      icon: hotspot.icon,
-    })),
+    ...misclassified.map((hotspot) =>
+      createReviewItem(hotspot, "wrong", state.classifications[hotspot.id])
+    ),
+    ...missedImportant.map((hotspot) => createReviewItem(hotspot, "missed")),
   ];
 
-  const nextPath = inspection.sessionComplete ? "/takeaway" : "/board";
-  const nextLabel = inspection.sessionComplete ? "See final takeaway" : "Check another listing";
+  const nextPath = sessionComplete ? "/takeaway" : "/board";
+  const nextLabel = sessionComplete ? "See final takeaway" : "Check another listing";
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] text-zinc-900 p-6 pb-12">
@@ -140,7 +163,7 @@ export function OutcomeScreen() {
             <div className="rounded-xl bg-zinc-50 p-3">
               <div className="text-zinc-500 mb-1">Verdict</div>
               <div className="font-bold text-zinc-900">
-                {inspection.state.verdict === "scam" ? "It’s a scam" : "It’s not a scam"}
+                {state.verdict === "scam" ? "It’s a scam" : "It’s not a scam"}
               </div>
             </div>
             <div className="rounded-xl bg-zinc-50 p-3">

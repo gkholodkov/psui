@@ -1,4 +1,3 @@
-import React from "react";
 import { ads } from "../data";
 import { useAdInspection, type Verdict } from "../state/InspectionContext";
 import { Search } from "lucide-react";

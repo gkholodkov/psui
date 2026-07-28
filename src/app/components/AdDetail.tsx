@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useParams, Link, Navigate, useNavigate } from "react-router";
 import { ads } from "../data";
 import { Search, ShieldCheck, ShieldAlert } from "lucide-react";
@@ -9,21 +9,16 @@ export function AdDetail() {
   const { adId } = useParams();
   const navigate = useNavigate();
   const ad = ads.find((item) => item.id === adId);
-  const inspection = useAdInspection(adId ?? "");
+  const { decide, isCompleted, reset } = useAdInspection(adId ?? "");
 
   useEffect(() => {
-    if (adId && !inspection.isCompleted) {
-      inspection.reset();
-      inspection.setActive();
-    }
-    // This screen starts a fresh session for the selected offer.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [adId]);
+    if (adId && !isCompleted) reset();
+  }, [adId, isCompleted, reset]);
 
-  if (!ad || inspection.isCompleted) return <Navigate to="/board" replace />;
+  if (!ad || isCompleted) return <Navigate to="/board" replace />;
 
   const handleDecision = (verdict: Verdict) => {
-    inspection.decide(verdict);
+    decide(verdict);
     navigate(`/ad/${ad.id}/outcome`, { replace: true });
   };
 

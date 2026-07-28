@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router";
 import { ads, checklist, type ChecklistKey } from "../data";
 import { useInspectionContext } from "../state/InspectionContext";

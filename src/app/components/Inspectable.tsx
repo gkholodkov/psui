@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { type InspectablePosition, useAdInspection } from "../state/InspectionContext";
+import { useAdInspection } from "../state/InspectionContext";
 import { getAnswerOptions, ads } from "../data";
 import { CheckCircle2, ChevronRight, XCircle } from "lucide-react";
 
@@ -8,24 +8,19 @@ interface InspectableProps {
   adId: string;
   hotspotId: string;
   active: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 }
 
 export function Inspectable({ adId, hotspotId, active, children, className = "" }: InspectableProps) {
   const ad = ads.find((item) => item.id === adId);
   const hotspot = ad?.hotspots.find((item) => item.id === hotspotId);
-  const { state, tap, selectInspectable, clearSelectedInspectable, classify, advance } =
-    useAdInspection(adId);
+  const { state, tap, classify, advance } = useAdInspection(adId);
   const [open, setOpen] = useState(false);
-  const triggerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!active) {
-      setOpen(false);
-      clearSelectedInspectable(hotspotId);
-    }
-  }, [active, clearSelectedInspectable, hotspotId]);
+    if (!active) setOpen(false);
+  }, [active]);
 
   if (!hotspot) return <>{children}</>;
 
@@ -34,46 +29,13 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
   const isCorrect = state.correct[hotspotId];
   const detailNumber = (ad?.inspectionOrder.indexOf(hotspotId) ?? -1) + 1;
 
-  const getInspectablePosition = (): InspectablePosition | null => {
-    const rect = triggerRef.current?.getBoundingClientRect();
-    if (!rect) return null;
-
-    const scrollX = window.scrollX;
-    const scrollY = window.scrollY;
-    return {
-      x: rect.x,
-      y: rect.y,
-      width: rect.width,
-      height: rect.height,
-      top: rect.top,
-      right: rect.right,
-      bottom: rect.bottom,
-      left: rect.left,
-      documentX: rect.x + scrollX,
-      documentY: rect.y + scrollY,
-      documentTop: rect.top + scrollY,
-      documentRight: rect.right + scrollX,
-      documentBottom: rect.bottom + scrollY,
-      documentLeft: rect.left + scrollX,
-    };
-  };
-
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
     if (next) {
       tap(hotspotId);
-      const position = getInspectablePosition();
-      if (position) selectInspectable(hotspotId, position);
-    } else {
-      clearSelectedInspectable(hotspotId);
-      if (chosen !== undefined) {
-        advance();
-      }
+    } else if (chosen !== undefined) {
+      advance();
     }
-  };
-
-  const handleNext = () => {
-    handleOpenChange(false);
   };
 
   if (!active) {
@@ -84,7 +46,6 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <div
-          ref={triggerRef}
           role="button"
           tabIndex={0}
           onKeyDown={(event) => {
@@ -167,7 +128,7 @@ export function Inspectable({ adId, hotspotId, active, children, className = "" 
               </div>
               <button
                 type="button"
-                onClick={handleNext}
+                onClick={() => handleOpenChange(false)}
                 className="mt-4 w-full bg-[#E3B740] hover:bg-[#d6a935] text-zinc-900 px-4 py-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2"
               >
                 {state.activeHotspotId === ad?.inspectionOrder[ad.inspectionOrder.length - 1]

@@ -1,4 +1,3 @@
-import React from "react";
 import { createBrowserRouter } from "react-router";
 
 import { WelcomeScreen } from "./components/WelcomeScreen";

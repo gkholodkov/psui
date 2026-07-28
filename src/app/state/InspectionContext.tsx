@@ -1,27 +1,12 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { ads, getExpectedChoice, type AnswerChoice } from "../data";
-
-export interface InspectablePosition {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  top: number;
-  right: number;
-  bottom: number;
-  left: number;
-  documentX: number;
-  documentY: number;
-  documentTop: number;
-  documentRight: number;
-  documentBottom: number;
-  documentLeft: number;
-}
-
-export interface SelectedInspectable {
-  hotspotId: string;
-  position: InspectablePosition;
-}
 
 export type Verdict = "scam" | "not-scam";
 
@@ -29,7 +14,6 @@ export interface AdInspectionState {
   tapped: Set<string>;
   classifications: Record<string, AnswerChoice>;
   correct: Record<string, boolean>;
-  selectedInspectable: SelectedInspectable | null;
   activeHotspotId: string | null;
   verdict: Verdict | null;
 }
@@ -37,16 +21,12 @@ export interface AdInspectionState {
 interface ContextValue {
   byAd: Record<string, AdInspectionState>;
   completedAdIds: Set<string>;
-  lastAdId: string | null;
   tap: (adId: string, hotspotId: string) => void;
-  selectInspectable: (adId: string, hotspotId: string, position: InspectablePosition) => void;
-  clearSelectedInspectable: (adId: string, hotspotId?: string) => void;
   classify: (adId: string, hotspotId: string, choice: AnswerChoice) => void;
   startInspection: (adId: string) => void;
   advance: (adId: string) => void;
   decide: (adId: string, verdict: Verdict) => void;
   completeAd: (adId: string) => void;
-  setLastAdId: (adId: string) => void;
   reset: (adId: string) => void;
   resetAll: () => void;
 }
@@ -55,67 +35,45 @@ const createEmptyState = (): AdInspectionState => ({
   tapped: new Set(),
   classifications: {},
   correct: {},
-  selectedInspectable: null,
   activeHotspotId: null,
   verdict: null,
 });
 
+const EMPTY_INSPECTION_STATE = createEmptyState();
+
+const getAdState = (byAd: Record<string, AdInspectionState>, adId: string) =>
+  byAd[adId] ?? createEmptyState();
+
 const InspectionContext = createContext<ContextValue | null>(null);
 
-export function InspectionProvider({ children }: { children: React.ReactNode }) {
+export function InspectionProvider({ children }: { children: ReactNode }) {
   const [byAd, setByAd] = useState<Record<string, AdInspectionState>>({});
   const [completedAdIds, setCompletedAdIds] = useState<Set<string>>(new Set());
-  const [lastAdId, setLastAdIdState] = useState<string | null>(null);
-
-  const ensure = (adId: string, prev: Record<string, AdInspectionState>) =>
-    prev[adId] ?? createEmptyState();
 
   const tap = useCallback((adId: string, hotspotId: string) => {
     setByAd((prev) => {
-      const cur = ensure(adId, prev);
-      const nextTapped = new Set(cur.tapped);
+      const current = getAdState(prev, adId);
+      const nextTapped = new Set(current.tapped);
       nextTapped.add(hotspotId);
-      return { ...prev, [adId]: { ...cur, tapped: nextTapped } };
-    });
-  }, []);
-
-  const selectInspectable = useCallback(
-    (adId: string, hotspotId: string, position: InspectablePosition) => {
-      setByAd((prev) => ({
-        ...prev,
-        [adId]: {
-          ...ensure(adId, prev),
-          selectedInspectable: { hotspotId, position },
-        },
-      }));
-    },
-    []
-  );
-
-  const clearSelectedInspectable = useCallback((adId: string, hotspotId?: string) => {
-    setByAd((prev) => {
-      const cur = ensure(adId, prev);
-      if (!cur.selectedInspectable) return prev;
-      if (hotspotId && cur.selectedInspectable.hotspotId !== hotspotId) return prev;
-      return { ...prev, [adId]: { ...cur, selectedInspectable: null } };
+      return { ...prev, [adId]: { ...current, tapped: nextTapped } };
     });
   }, []);
 
   const classify = useCallback((adId: string, hotspotId: string, choice: AnswerChoice) => {
     setByAd((prev) => {
-      const cur = ensure(adId, prev);
+      const current = getAdState(prev, adId);
       const ad = ads.find((a) => a.id === adId);
       const hotspot = ad?.hotspots.find((h) => h.id === hotspotId);
       const isCorrect = hotspot ? getExpectedChoice(hotspot) === choice : false;
-      const nextTapped = new Set(cur.tapped);
+      const nextTapped = new Set(current.tapped);
       nextTapped.add(hotspotId);
       return {
         ...prev,
         [adId]: {
-          ...cur,
+          ...current,
           tapped: nextTapped,
-          classifications: { ...cur.classifications, [hotspotId]: choice },
-          correct: { ...cur.correct, [hotspotId]: isCorrect },
+          classifications: { ...current.classifications, [hotspotId]: choice },
+          correct: { ...current.correct, [hotspotId]: isCorrect },
         },
       };
     });
@@ -123,14 +81,14 @@ export function InspectionProvider({ children }: { children: React.ReactNode }) 
 
   const startInspection = useCallback((adId: string) => {
     setByAd((prev) => {
-      const cur = ensure(adId, prev);
+      const current = getAdState(prev, adId);
       const ad = ads.find((item) => item.id === adId);
       const firstHotspotId = ad?.inspectionOrder[0] ?? null;
       return {
         ...prev,
         [adId]: {
-          ...cur,
-          activeHotspotId: cur.activeHotspotId ?? firstHotspotId,
+          ...current,
+          activeHotspotId: current.activeHotspotId ?? firstHotspotId,
         },
       };
     });
@@ -138,24 +96,28 @@ export function InspectionProvider({ children }: { children: React.ReactNode }) 
 
   const advance = useCallback((adId: string) => {
     setByAd((prev) => {
-      const cur = ensure(adId, prev);
+      const current = getAdState(prev, adId);
       const ad = ads.find((item) => item.id === adId);
       const order = ad?.inspectionOrder ?? [];
-      const currentIndex = order.findIndex((hotspotId) => hotspotId === cur.activeHotspotId);
+      const currentIndex = order.findIndex(
+        (hotspotId) => hotspotId === current.activeHotspotId
+      );
       const nextHotspotId = order[currentIndex + 1];
       return {
         ...prev,
         [adId]: {
-          ...cur,
+          ...current,
           activeHotspotId: nextHotspotId ?? null,
-          selectedInspectable: null,
         },
       };
     });
   }, []);
 
   const decide = useCallback((adId: string, verdict: Verdict) => {
-    setByAd((prev) => ({ ...prev, [adId]: { ...ensure(adId, prev), verdict } }));
+    setByAd((prev) => ({
+      ...prev,
+      [adId]: { ...getAdState(prev, adId), verdict },
+    }));
   }, []);
 
   const completeAd = useCallback((adId: string) => {
@@ -174,41 +136,30 @@ export function InspectionProvider({ children }: { children: React.ReactNode }) 
   const resetAll = useCallback(() => {
     setByAd({});
     setCompletedAdIds(new Set());
-    setLastAdIdState(null);
   }, []);
-
-  const setLastAdId = useCallback((adId: string) => setLastAdIdState(adId), []);
 
   const value = useMemo<ContextValue>(
     () => ({
       byAd,
       completedAdIds,
-      lastAdId,
       tap,
-      selectInspectable,
-      clearSelectedInspectable,
       classify,
       startInspection,
       advance,
       decide,
       completeAd,
-      setLastAdId,
       reset,
       resetAll,
     }),
     [
       byAd,
       completedAdIds,
-      lastAdId,
       tap,
-      selectInspectable,
-      clearSelectedInspectable,
       classify,
       startInspection,
       advance,
       decide,
       completeAd,
-      setLastAdId,
       reset,
       resetAll,
     ]
@@ -225,30 +176,40 @@ export function useInspectionContext() {
 
 export function useAdInspection(adId: string) {
   const ctx = useInspectionContext();
-  const state = ctx.byAd[adId] ?? createEmptyState();
+  const state = ctx.byAd[adId] ?? EMPTY_INSPECTION_STATE;
   const isCompleted = ctx.completedAdIds.has(adId);
   const sessionComplete = ctx.completedAdIds.size >= ads.length;
 
-  return useMemo(
-    () => ({
-      state,
-      tap: (hotspotId: string) => ctx.tap(adId, hotspotId),
-      selectInspectable: (hotspotId: string, position: InspectablePosition) =>
-        ctx.selectInspectable(adId, hotspotId, position),
-      clearSelectedInspectable: (hotspotId?: string) =>
-        ctx.clearSelectedInspectable(adId, hotspotId),
-      classify: (hotspotId: string, choice: AnswerChoice) => ctx.classify(adId, hotspotId, choice),
-      startInspection: () => ctx.startInspection(adId),
-      advance: () => ctx.advance(adId),
-      decide: (verdict: Verdict) => ctx.decide(adId, verdict),
-      complete: () => ctx.completeAd(adId),
-      isCompleted,
-      completedAdIds: ctx.completedAdIds,
-      sessionComplete,
-      reset: () => ctx.reset(adId),
-      resetAll: ctx.resetAll,
-      setActive: () => ctx.setLastAdId(adId),
-    }),
-    [state, ctx, adId, isCompleted, sessionComplete]
+  const tap = useCallback(
+    (hotspotId: string) => ctx.tap(adId, hotspotId),
+    [adId, ctx.tap]
   );
+  const classify = useCallback(
+    (hotspotId: string, choice: AnswerChoice) => ctx.classify(adId, hotspotId, choice),
+    [adId, ctx.classify]
+  );
+  const startInspection = useCallback(
+    () => ctx.startInspection(adId),
+    [adId, ctx.startInspection]
+  );
+  const advance = useCallback(() => ctx.advance(adId), [adId, ctx.advance]);
+  const decide = useCallback(
+    (verdict: Verdict) => ctx.decide(adId, verdict),
+    [adId, ctx.decide]
+  );
+  const complete = useCallback(() => ctx.completeAd(adId), [adId, ctx.completeAd]);
+  const reset = useCallback(() => ctx.reset(adId), [adId, ctx.reset]);
+
+  return {
+    state,
+    tap,
+    classify,
+    startInspection,
+    advance,
+    decide,
+    complete,
+    isCompleted,
+    sessionComplete,
+    reset,
+  };
 }

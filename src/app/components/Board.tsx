@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router";
 import { ads, type ListingFactIcon } from "../data";
 import { CalendarDays, Eye, FileCheck2, Home, MapPin } from "lucide-react";
